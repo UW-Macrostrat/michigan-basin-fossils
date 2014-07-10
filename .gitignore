@@ -24,7 +24,6 @@ public/img/*
 public/jquery-ui-1.10.3.custom
 public/data/
 public/scripts/
-public/bootstrap/
 uploads/*
 shapefiles
 dump*
