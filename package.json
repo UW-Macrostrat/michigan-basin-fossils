@@ -1,0 +1,21 @@
+{
+  "name": "michigan-basin-fossils",
+  "version": "0.2.0",
+  "description": "A fossil database",
+  "main": "server.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/UW-Macrostrat/michigan-basin-fossils.git"
+  },
+  "author": "John J Czaplewski",
+  "license": "CC0",
+  "dependencies": {
+    "async": "^0.9.0",
+    "connect": "2.7.10",
+    "consolidate": "0.9.1",
+    "easyimage": "0.1.3",
+    "express": "3.x",
+    "mustache": "0.7.2",
+    "mysql": "^2.3.2"
+  }
+}

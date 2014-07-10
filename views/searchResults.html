@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Friends of the UMMP Michigan Basin Specimen Database</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content=""/>
+    <meta name="author" content="John J Czaplewski"/>
+
+    <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/3.1.1/css/font-awesome.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/smoothness/jquery-ui-1.10.3.custom.css"/>
+    <link href="/css/main.css" rel="stylesheet"/>
+    <!--<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.5/leaflet.css" />-->
+    <link rel="stylesheet" href="/css/leaflet.css" />
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'/>
+
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-42320781-1', 'michiganbasinfossils.org');
+      ga('send', 'pageview');
+
+    </script>
+    
+  </head>
+
+  <body>
+
+	<div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container-fluid">
+          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a href="/" class="brand">UMMP Photo Archive</a>
+          <div class="nav-collapse collapse nav-pills pull-right">
+            <ul class="nav">
+              <li><a href="/">Home</a></li>
+
+              <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                    About
+                    <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu pull-right">
+                  <li><a href="/aboutus" title="About">About Us</a></li>
+                  <li><a href="/about" title="About the application">The Application</a></li>
+                  <li><a href="/stats" title="Stats">Stats</a></li>
+                  <li><a href="/legal" title="Legal">Legal</a></li>
+                </ul>
+              </li>
+
+              <li><a href="/search/recent?page=1">Browse</a></li>
+              <li id="searchButton" class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                    Search
+                    <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu pull-right">
+                  <li>
+                    <form method='POST' action='/simpleSearch?page=1' onsubmit="return checkSearch()" id="searchForm" >
+                      <div class="control-group" id="simpleSearch">
+                        <div class="input-append">
+                          <input type="hidden" id="searchType" name="searchType"/>
+                          <input class="span3 typeahead" id="appendedInputButton" type="text" name="query" placeholder="Taxon, species, or photo id"/>
+                          <button style="margin-top: 2px;" class="btn btn-success" type="submit"><i class="icon-search"></i></button>
+                        </div>
+                        <span class="help-inline" id="queryHelp" style="display:none;"></span>
+                      </div>
+                    </form>
+                  </li>
+                  <li><a href="/advancedSearch">Advanced Search</a></li>
+                </ul>
+              </li>
+
+              {{#login}}
+              <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                  Welcome {{full_name}} 
+                  <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu pull-right">
+                  <li><a href="/upload">Upload photo</a></li>
+                  <li><a href="/faq">Upload help</a></li>
+                  <li><a href="#" type="submit" onclick="document.forms['contributions'].submit(); return false;">My contributions</a></li> 
+                  <li><a type="submit" href="/logout">Log out</a></li>
+                </ul>
+              </li>
+              <form name="contributions" method="GET" action="/search">
+                <input type="hidden" name="contrib" value="{{full_name}}"/>
+              </form>
+              {{/login}}
+              {{^login}}
+              <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                    Login
+                    <b class="caret"></b>
+                </a>
+
+                <ul class="dropdown-menu pull-right">
+                  <form method="POST" action="/login">
+                    <input class="span2" name="user" type="text" placeholder="Username"/>
+                    <input class="span2" name="password" type="password" placeholder="Password"/>
+                    <button type="submit" class="btn btn-primary">Log in</button>
+                  </form>
+                </ul>
+              </li>
+              {{/login}}
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container-fluid">
+      <div class="row-fluid">
+      	<div class="span8" id="results">
+      		{{#limits}}
+      		<h3 style="text-align:center;">{{header}}</h3>
+      		{{/limits}}
+      		{{#pages}}
+            {{#small}}
+              <div class="pagination pagination-centered">
+                <ul>
+                  {{#firstPage}}
+                  {{/firstPage}}
+                  {{^firstPage}}
+                    <li><a href="{{previous}}">&lt;</a></li>
+                  {{/firstPage}}
+
+                  {{#pagination}}
+                    {{#active}}
+                      <li class="active"><a href="{{pageurl}}">{{pageid}}</a></li>
+                    {{/active}}
+                    {{^active}}
+                      <li><a href="{{pageurl}}">{{pageid}}</a></li>
+                    {{/active}}
+                  {{/pagination}}
+
+                  {{#lastPage}}
+                  {{/lastPage}}
+                  {{^lastPage}}
+                    <li><a href="{{next}}">&gt;</a></li>
+                  {{/lastPage}}
+
+                </ul>
+              </div>
+            {{/small}}
+            {{^small}}
+            <div class="pagination pagination-centered">
+              <ul>
+                {{#firstPage}}
+                {{/firstPage}}
+                {{^firstPage}}
+                  <li><a href="{{first}}">&laquo;</a></li>
+                  <li><a href="{{previous}}">&lt;</a></li>
+                {{/firstPage}}
+       
+                {{#pagination}}
+                  {{#active}}
+                    <li class="active"><a href="{{pageurl}}">{{pageid}}</a></li>
+                  {{/active}}
+                  {{^active}}
+                    <li><a href="{{pageurl}}">{{pageid}}</a></li>
+                  {{/active}}
+                {{/pagination}}
+
+                {{#lastPage}}
+                {{/lastPage}}
+                {{^lastPage}}
+                  <li><a href="{{next}}">&gt;</a></li>
+                  <li><a href="{{lastpageurl}}">&raquo;</a></li>
+                {{/lastPage}}
+
+              </ul>
+            </div>
+            {{/small}}
+          
+          {{/pages}}
+          {{^pages}}{{/pages}}
+      		<div class="accordion" id="accordion2"></div>
+      		<table class="table table-condensed" id="resultTable">
+      			<thead>
+      				<tr>
+      					<th>More Info</th>
+      					<th>Image</th>
+      					<th>Taxa</th>
+      					<th>Strat Unit</th>
+      					<th>Contributor</th>
+      				</tr>
+      			</thead>
+      			<tbody>
+      				{{#result}}
+      				<tr>
+      					<td>
+      						<div class="accordion-group">
+      							<div class="accordion-heading">
+      								<a href="#collapse{{id}}" data-parent="#accordion2" data-toggle="collapse" class="accordion-toggle"><i class="icon-plus"></i></a>
+      							</div>
+      						</div>
+      					</td>
+      					<td><a href="#lightbox" class="thumb" id="{{id}}" data-toggle="modal"><img src="/images/thumbs/{{id}}.jpg"/></a></td>
+      					<td><i>{{#type_specimen}}{{taxa}}<strong><br>Type Specimen</strong>{{/type_specimen}}{{^type_specimen}}{{taxa}}{{/type_specimen}}</i></td>
+      					<td><a href="/search?{{rank}}={{unit}}">{{unit}} formation</a></td>
+      					<td>{{name}}</td>
+      				</tr>
+      				<tr>
+      					<td class="moreInfo"></td>
+      					<td colspan="5" class="noBoarder">
+      						<div class="accordion-body collapse" id="collapse{{id}}" style="height:0px;">
+      							<div class="accordion-inner">
+                      <ul id="tabs" class="nav nav-tabs">
+                        <li class="active"><a href="#ummpInfo{{id}}" data-toggle="tab"><img class="logo_small" src="/img/ummp_small.jpg"/></a></li>
+                        <li><a class="pbdbInfo" href="#pbdbInfo{{id}}" data-toggle="tab"><img class="logo_small" src="/img/PBDB.jpg"/></a></li>
+                        <li><a class="deepblueInfo" href="#deepblueInfo{{id}}" data-toggle="tab"><img class="logo_small" src="/img/deepblue.png"/></a></li>
+                      </ul>
+                      <div class="tab-content">
+                        <div class="tab-pane active" id="ummpInfo{{id}}">
+          								<p>
+          									<strong>Submitted on </strong>{{date}} <strong>by </strong>{{name}}
+          								<br><br><strong>Location (approximate):</strong> {{city}}, {{county}}, {{state}}
+          								<br><br><strong>Strat unit:</strong> <a href="/search?{{rank}}={{unit}}">{{unit}} formation</a>
+          								<br><br><strong>Submitter notes:</strong> {{notes}}
+                          <br><br><strong>Photo title:</strong> {{title}}
+                          <br><br><strong>Taxa present:</strong> <i>{{taxa}}</i>
+                          {{#type_specimen}}
+                          <br><br><strong>UMMP specimen number: </strong> {{type_specimen}} {{ummp}}
+                          {{/type_specimen}}
+                          <br><br><a href="/viewrecord/{{id}}">View full record</a>
+          								</p>
+                        </div>
+                        <div class="tab-pane" id="pbdbInfo{{id}}">
+                        </div>
+                        <div class="tab-pane" id="deepblueInfo{{id}}">
+                        </div>
+                      </div>
+      							</div>
+      						</div>
+      					</td>
+      				</tr>
+      				{{/result}}
+      			</tbody>
+      		</table>
+      		{{#pages}}
+            {{#small}}
+              <div class="pagination pagination-centered">
+                <ul>
+                  {{#firstPage}}
+                  {{/firstPage}}
+                  {{^firstPage}}
+                    <li><a href="{{previous}}">&lt;</a></li>
+                  {{/firstPage}}
+
+                  {{#pagination}}
+                    {{#active}}
+                      <li class="active"><a href="{{pageurl}}">{{pageid}}</a></li>
+                    {{/active}}
+                    {{^active}}
+                      <li><a href="{{pageurl}}">{{pageid}}</a></li>
+                    {{/active}}
+                  {{/pagination}}
+
+                  {{#lastPage}}
+                  {{/lastPage}}
+                  {{^lastPage}}
+                    <li><a href="{{next}}">&gt;</a></li>
+                  {{/lastPage}}
+
+                </ul>
+              </div>
+            {{/small}}
+            {{^small}}
+            <div class="pagination pagination-centered">
+              <ul>
+                {{#firstPage}}
+                {{/firstPage}}
+                {{^firstPage}}
+                  <li><a href="{{first}}">&laquo;</a></li>
+                  <li><a href="{{previous}}">&lt;</a></li>
+                {{/firstPage}}
+       
+                {{#pagination}}
+                  {{#active}}
+                    <li class="active"><a href="{{pageurl}}">{{pageid}}</a></li>
+                  {{/active}}
+                  {{^active}}
+                    <li><a href="{{pageurl}}">{{pageid}}</a></li>
+                  {{/active}}
+                {{/pagination}}
+
+                {{#lastPage}}
+                {{/lastPage}}
+                {{^lastPage}}
+                  <li><a href="{{next}}">&gt;</a></li>
+                  <li><a href="{{lastpageurl}}">&raquo;</a></li>
+                {{/lastPage}}
+
+              </ul>
+            </div>
+            {{/small}}
+          
+          {{/pages}}
+          {{^pages}}{{/pages}}
+      	</div>
+      	<div class="span4" id="map">
+      	</div>
+      </div>
+      <hr>
+      
+      <footer>
+        <img style="width:55px;"src="/img/nsf.png"/>
+        <p style="display:inline;">Funding provided by NSF EAR #1150082<br>
+          Produced by the <a href="http://strata.geology.wisc.edu/Home/Home.html">Macrostrat Lab</a> at the University of Wisconsin-Madison Department of GeoScience</p>
+      </footer>
+
+    </div><!--/.fluid-container-->
+
+    <div id="thumbnailLightbox" class="modal modalImage hide fade">
+      <div class="modal-body image" id="thumbnailLightboxBody">
+        <ul id="tabs" class="nav nav-tabs">
+          <li class="active"><a href="#grid" data-toggle="tab"><i class="icon-th"></i></a></li>
+          <li><a href="#slides" data-toggle="tab"><i class="icon-picture"></i></a></li>
+          <li id="rightArrow" class="pull-right"><a href="javascript:morePictures(currentCounty, 1)"><i class="icon-arrow-right"></i></a></li>
+          <li id="modalPagination" class="pull-right">page <i id="currentPage"></i> of <i id="totalPages"></i></li>
+          <li id="leftArrow" class="pull-right"><a href="javascript:morePictures(currentCounty, 0)"><i class="icon-arrow-left"></i></a></li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="grid"><!--thumbnails here --></div>
+          <div class="tab-pane" id="slides">
+            <div id="myCarousel" class="carousel slide">
+              <!-- Carousel items -->
+            </div>
+          </div>
+        </div>
+        
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">Close &times;</button>
+      </div>
+    </div>
+
+    <div id="lightbox" class="modal modalImage hide fade">
+      <div class="modal-body image" id="lightboxBody">
+        <ul id="tabCurrent" class="nav nav-tabs">
+          <li><a href="#gridCurrent" data-toggle="tab"><i class="icon-th"></i></a></li>
+          <li class="active"><a href="#slidesCurrent" data-toggle="tab"><i class="icon-picture"></i></a></li>
+        </ul>
+        <!-- Carousel items -->
+        <div class="tab-content">
+          <div class="tab-pane" id="gridCurrent">
+            <div class="row-fluid">
+              <div class="span12">
+                {{#result}}
+                <div class="span3 ratio tmb" id="{{id}}" style="background-image:url('/images/thumbs/{{id}}.jpg')"></div>
+                {{/result}}
+              </div>
+            </div>
+          </div>
+          <div class="tab-pane active" id="slidesCurrent">
+            <div id="myCarousel2" class="carousel slide">
+              <div class='carousel-inner'>
+                {{#result}}
+                <div class='item' id='{{id}}'>
+                  <a href='/viewrecord/{{id}}'>
+                    <img src='/images/main/{{id}}.jpg'/>
+                  </a>
+                  <div class='carousel-caption'>
+                    <h4 class="slideTitle">{{taxa}}</h4>
+                    <p>{{name}}</p>
+                  </div>
+                </div>
+                {{/result}} 
+              </div>
+              <a class='carousel-control left' href='#myCarousel2' data-slide='prev'>&lsaquo;</a>
+              <a class='carousel-control right' href='#myCarousel2' data-slide='next'>&rsaquo;</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      <div class="modal-footer">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">Close &times;</button>
+      </div>
+    </div>
+
+    <!--<script src="http://d3js.org/topojson.v1.min.js"></script>-->
+    <script src="/js/topojson.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    <!--<script src="/js/jquery.v2.0.min.js"></script>-->
+    <script src="/bootstrap/js/bootstrap.min.js"></script>
+    <!--<script src="http://cdn.leafletjs.com/leaflet-0.5/leaflet.js"></script>-->
+    <script src="/js/leaflet.js"></script>
+    <!--<script src="http://ajax.cdnjs.com/ajax/libs/mustache.js/0.7.2/mustache.min.js"></script>-->
+    <script src="/js/mustache.js"></script>
+    <script src="/js/jquery-ui-1.10.3.custom.min.js"></script>
+    <script src="/js/searchResults.js"></script>
+
+  	<script type="text/javascript">
+      function getMapData() {
+    		return {{{mapdata}}};
+    	}
+    	init();
+    </script>
+  </body>
+</html>

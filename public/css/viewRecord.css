@@ -1,0 +1,40 @@
+.userComment {
+	margin-bottom:15px;
+	margin-left:20px;
+}
+.addComment {
+	margin-top: 25px;
+}
+.time {
+	color:#777;
+	font-size: 10px;
+	margin-left:10px;
+}
+section {
+	margin-left: 25px;
+	margin-top: 10px;
+	margin-bottom: 20px;
+	color: #666;
+	width:62%;
+	font-style: italic;
+}
+#commentForm {
+	margin-top:20px;
+}
+.editComment {
+	margin-left: 20px;
+	color:#53A976;
+	cursor: pointer;
+	font-size: 11px;
+}
+.deleteComment {
+	margin-left: 10px;
+	color:#A8383A;
+	cursor: pointer;
+	font-size: 11px;
+}
+.editRecord {
+	color:#53A976;
+	cursor: pointer;
+	font-size: 11px;
+}

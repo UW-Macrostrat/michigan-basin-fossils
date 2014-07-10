@@ -1,0 +1,60 @@
+.main-nav {
+  top:0;
+  right: 0;
+  left: 0;
+  z-index: 1030;
+  margin-bottom: 0;
+  position: absolute;
+}
+.fixed {
+  position: fixed
+}
+.navbar-inner {
+  height:155px;
+}
+.nav-tabs-fixed {
+  right:0;
+  position: absolute;
+  top:116px;
+  z-index: 1000;
+}
+.brand-fixed {
+  left:10px;
+  position: fixed;
+}
+#collapseButton {
+  position: absolute;
+  top:116px;
+  right:10px;
+}
+.brand {
+  display:none;
+}
+#header_logo {
+  background-image: url(/img/ummp_logo_black.png);
+  background-size: 100%;
+  background-repeat: no-repeat;
+  margin-top: -17px;
+  margin-left:10px;
+  height:250px;
+}
+.jumbotron {
+  text-align: left;
+  width:100%;
+  text-shadow: 1px 1px 5px whitesmoke;
+  margin-top:0px;
+  padding-top: 8px;
+  padding-bottom: 1px;
+}
+.jumbotron h1 {
+  font-size: 33px;
+  font-family: 'Caudex', serif;
+  line-height: 1;
+}
+#explore {
+  text-align: center;
+  color:#777;
+  font-weight: bolder;
+  letter-spacing: 6px;
+  opacity: 0.8;
+}
