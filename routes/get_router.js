@@ -1582,7 +1582,7 @@ function processQuery(params, req, res, page) {
 
         res.render('searchResults', {
           "login": login_id,
-          "result": rows,
+          "result": result,
           "limits": limit, 
           "pages": pages, 
           "mapdata": JSON.stringify(mapdata)
