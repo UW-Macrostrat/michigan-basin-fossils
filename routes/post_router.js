@@ -1063,7 +1063,7 @@ exports.searchPost = function(req, res) {
             if (typeof query !== 'undefined') {
               query += " and photos.id in (SELECT photos.id from photos,strat,chron where photos.strat_id=strat.id and strat.chron_id=chron.id and " + where + ")";
             } else {
-              query = "SELECT DISTINCT photos.id FROM photos WHERE photos.id in (SELECT photos.id from photos,strat,chron where photos.strat_id=strat.id and strat.chron_id=chron.id and " + where + ")";
+              query = "photos.id in (SELECT photos.id from photos,strat,chron where photos.strat_id=strat.id and strat.chron_id=chron.id and " + where + ")";
             }
           }
 
@@ -1118,9 +1118,9 @@ exports.searchPost = function(req, res) {
           // Store the query in a session variable for use by GET routers
           req.session.query = query;
 
-          console.log("POST: ", query);
+          //console.log("POST: ", query);
 
-          if (typeof query === "undefined") {
+          if (typeof query === undefined) {
             var limit = [{"header": "No records found"}],
                 pages = [];
 
@@ -1141,39 +1141,41 @@ exports.searchPost = function(req, res) {
         connection.query("SELECT COUNT(DISTINCT photos.id) as count, IF(((SELECT COUNT(*) from photos WHERE " + query + ") > 20), 20, (SELECT COUNT(*) from photos WHERE " + query + ")) as test FROM photos LEFT OUTER JOIN locals_mod2 ON locals_mod2.id = photos.local_id LEFT OUTER JOIN strat ON strat.id = photos.strat_id LEFT OUTER JOIN userlog ON userlog.login = photos.login_id LEFT OUTER JOIN users ON users.username = userlog.name LEFT OUTER JOIN photo_notes ON photo_notes.photo_id = photos.id LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id WHERE " + query, function(err, rows, fields) {
           if (err) {
             callback(err);
-          }
-          var records = rows || [{"test": 0, "count": 0}];
-
-          // This is true if more than 20 records are found
-          if (records[0].county > 0 && records[0].test === 20) {
-            var limitb = 20,
-                limita = limitb - 20;
-
-            callback(null, null, limita, limitb, records);
-
-          // If no records are found, stop and send a response indicating so
-          } else if (records[0].test < 1) {
-            var limit = [{"header": "No records found"}],
-                pages = [];
-            req.session.hits = records[0].count;
-            
-            connection.release();
-            if (typeof req.session.user_id === 'undefined') {
-              var login_id = [];
-            } else {
-              var login_id = [{"username": req.session.user_id, "full_name": req.session.full_name}];
-            }
-            res.render('searchResults', {
-              login: login_id, 
-              limits: limit, 
-              pages: pages
-            });
           } else {
-            var limitb = records[0].count,
-                limita = 0;
-            // error, skip, query, limita, limitb, records
-            callback(null, null, query, limita, limitb, records);
+            var records = rows || [{"test": 0, "count": 0}];
+
+            // This is true if more than 20 records are found
+            if (records[0].county > 0 && records[0].test === 20) {
+              var limitb = 20,
+                  limita = limitb - 20;
+
+              callback(null, null, limita, limitb, records);
+
+            // If no records are found, stop and send a response indicating so
+            } else if (records[0].test < 1) {
+              var limit = [{"header": "No records found"}],
+                  pages = [];
+              req.session.hits = records[0].count;
+              
+              //connection.release();
+              if (typeof req.session.user_id === 'undefined') {
+                var login_id = [];
+              } else {
+                var login_id = [{"username": req.session.user_id, "full_name": req.session.full_name}];
+              }
+              res.render('searchResults', {
+                login: login_id, 
+                limits: limit, 
+                pages: pages
+              });
+            } else {
+              var limitb = records[0].count,
+                  limita = 0;
+              // error, skip, query, limita, limitb, records
+              callback(null, null, query, limita, limitb, records);
+            }
           }
+            
         });
         
       },
