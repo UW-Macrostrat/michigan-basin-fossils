@@ -1551,9 +1551,10 @@ function processQuery(params, req, res, page) {
         connection.query("SELECT COUNT(distinct photos.id) as photos, COUNT(distinct taxa.taxon) as genera, COUNT(distinct case when photos.type_specimen != '' THEN photos.type_specimen END) as type_specimen, locals_mod2.county_fips as fips, (GROUP_CONCAT(DISTINCT ' ',strat.unit)) as strat FROM photos LEFT OUTER JOIN locals_mod2 ON locals_mod2.id = photos.local_id LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id LEFT OUTER JOIN strat ON strat.id = photos.strat_id WHERE " + query + " GROUP BY locals_mod2.county_fips", function(err, rows, fields) {
           if (err) {
             callback(err);
+          } else {
+            var mapdata = rows;
+            callback(null, limit, limita, pages, query, mapdata);
           }
-          var mapdata = rows;
-          callback(null, limit, limita, pages, query, madata);
         });
       },
 
