@@ -578,7 +578,6 @@ exports.photoTaxa = function(req, res) {
 
 // Used to process and render /search routes AFTER the initial POST (never called first, except for Phylum from homepage)
 exports.searchApp = function(req, res) {
-  console.log("searchApp");
   connection.getConnection(function(err, connection) {
     async.waterfall([
       function(callback) {
@@ -592,16 +591,14 @@ exports.searchApp = function(req, res) {
         var numParams = Object.keys(req.query).length;
         // Give advantage to URL params over cookie
         if (!req.query.page && numParams > 0) {
-          connection.release();
           // Get URL parmams here
           var params = req.query;
           processQuery(params, req, res, page);
         } else if (req.query.page && numParams > 1) {
-          connection.release();
           // Get URL params and ignore page
           var params = req.query;
           processQuery(params, req, res, page);
-        } else if (typeof req.session.search == 'undefined') {
+        } else if (typeof req.session.search === "undefined") {
           // If no params and no cookie
           connection.release();
           res.redirect("/");
@@ -618,7 +615,7 @@ exports.searchApp = function(req, res) {
           var limitb = parseInt(page) * 20,
               limita = limitb - 20;
 
-          callback(limita, limitb);
+          callback(null, limita, limitb, query);
         } else if (req.session.hits < 1) {
           connection.release();
           var limit = [{"header": "No records found"}],
@@ -783,7 +780,7 @@ exports.searchApp = function(req, res) {
         });
       }
 
-    ], function(error, result) {
+    ], function(error, result, limit, pages, mapdata) {
       connection.release();
       if (error) {
         console.log(error);
