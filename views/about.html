@@ -1,125 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>Friends of the UMMP Michigan Basin Specimen Database</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
-    <meta name="author" content="John J Czaplewski">
-
-    <link href="/css/bootstrap.min.css" rel="stylesheet">
-    <link href="//netdna.bootstrapcdn.com/font-awesome/3.1.1/css/font-awesome.css" rel="stylesheet">
-    <link rel="stylesheet" href="/css/smoothness/jquery-ui-1.10.3.custom.css"/>
-    <link href="/css/main.css" rel="stylesheet">
-
-
-    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
-    <script>
-      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-      ga('create', 'UA-42320781-1', 'michiganbasinfossils.org');
-      ga('send', 'pageview');
-
-    </script>
-
-  </head>
+  {{> head}}
 
   <body>
 
-    <div class="navbar navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container-fluid">
-          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a href="/" class="brand">UMMP Photo Archive</a>
-          <div class="nav-collapse collapse nav-pills pull-right">
-            <ul class="nav">
-              <li><a href="/">Home</a></li>
-
-              <li class="dropdown">
-                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                    About
-                    <b class="caret"></b>
-                </a>
-                <ul class="dropdown-menu pull-right">
-                  <li><a href="/aboutus" title="About">About Us</a></li>
-                  <li><a href="/about" title="About the application">The Application</a></li>
-                  <li><a href="/stats" title="Stats">Stats</a></li>
-                  <li><a href="/legal" title="Legal">Legal</a></li>
-                </ul>
-              </li>
-
-              
-              <li><a href="/search/recent?page=1">Browse</a></li>
-              
-              <li id="searchButton" class="dropdown">
-                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                    Search
-                    <b class="caret"></b>
-                </a>
-                <ul class="dropdown-menu pull-right">
-                  <li>
-                    <form method='POST' action='/simpleSearch?page=1' onsubmit="return checkSearch()" id="searchForm" >
-                      <div class="control-group" id="simpleSearch">
-                        <div class="input-append">
-                          <input type="hidden" id="searchType" name="searchType"/>
-                          <input class="span3 typeahead" id="appendedInputButton" type="text" name="query" placeholder="Taxon, species, or photo id"/>
-                          <button style="margin-top: 2px;" class="btn btn-success" type="submit"><i class="icon-search"></i></button>
-                        </div>
-                        <span class="help-inline" id="queryHelp" style="display:none;"></span>
-                      </div>
-                    </form>
-                  </li>
-                  <li><a href="/advancedSearch">Advanced Search</a></li>
-                </ul>
-              </li>
-              
-              {{#login}}
-              <li class="dropdown">
-                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                  Welcome {{full_name}} 
-                  <b class="caret"></b>
-                </a>
-                <ul class="dropdown-menu pull-right">
-                  <li><a href="/upload">Upload photo</a></li>
-                  <li><a href="/faq">Upload help</a></li>
-                  <li><a href="#" type="submit" onclick="document.forms['contributions'].submit(); return false;">My contributions</a></li> 
-                  <li><a type="submit" href="/logout">Log out</a></li>
-                </ul>
-              </li>
-              <form name="contributions" method="GET" action="/search">
-                <input type="hidden" name="contrib" value="{{full_name}}"/>
-              </form>
-              {{/login}}
-              {{^login}}
-              <li class="dropdown">
-                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                    Login
-                    <b class="caret"></b>
-                </a>
-
-                <ul class="dropdown-menu pull-right">
-                  <form method="POST" action="/login">
-                    <input class="span2" name="user" type="text" placeholder="Username">
-                    <input class="span2" name="password" type="password" placeholder="Password">
-                    <button type="submit" class="btn btn-primary">Log in</button>
-                  </form>
-                </ul>
-              </li>
-              {{/login}}
-
-            </ul>
-            
-          </div><!--/.nav-collapse -->
-        </div>
-      </div>
-    </div>
+    {{> navbar}}
+    
     <div class="container-fluid">
       <div class="row-fluid">
         <div class="span12">
@@ -145,11 +31,7 @@
       </div>
     <hr>
 
-    <footer>
-      <img style="width:55px;"src="/img/nsf.png"/>
-      <p style="display:inline;">Funding provided by NSF EAR #1150082<br>
-        Produced by the <a href="http://strata.geology.wisc.edu/Home/Home.html">Macrostrat Lab</a> at the University of Wisconsin-Madison Department of GeoScience</p>
-    </footer>
+    {{> footer}}
 
     </div><!--/.fluid-container-->
 

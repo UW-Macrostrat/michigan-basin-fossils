@@ -55,7 +55,10 @@ exports.root = function(req, res) {
         mapdata: JSON.stringify(result.four),
         stats: result.three,
         titlePic: result.one,
-        photos: result.two
+        photos: result.two,
+        partials: {
+          "footer": "footer"
+        }
       })
     })
   });
@@ -122,7 +125,12 @@ exports.autocomplete = function(req, res) {
 }
 
 exports.statPage = function(req, res) {
-  res.render('stats');
+  res.render('stats', {
+    partials: {
+      "navbar": "navbar",
+      "footer": "footer"
+    }
+  });
 }
 
 exports.randomPhotos = function(req, res) {
@@ -172,7 +180,12 @@ exports.faq = function(req, res) {
       }
       res.render('faq', {
         login: login_id,
-        mapdata: JSON.stringify(data)
+        mapdata: JSON.stringify(data),
+        partials: {
+          "head": "head",
+          "navbar": "navbar",
+          "footer": "footer"
+        }
       });
     });
   });
@@ -189,7 +202,12 @@ exports.about = function(req, res) {
       }
       res.render('about', {
         login: login_id,
-        mapdata: JSON.stringify(data)
+        mapdata: JSON.stringify(data),
+        partials: {
+          "head": "head",
+          "navbar": "navbar",
+          "footer": "footer"
+        }
       });
     });
   });
@@ -206,7 +224,12 @@ exports.aboutus = function(req, res) {
       }
       res.render('aboutus', {
         login: login_id,
-        mapdata: JSON.stringify(data)
+        mapdata: JSON.stringify(data),
+        partials: {
+          "head": "head",
+          "navbar": "navbar",
+          "footer": "footer"
+        }
       });
     });
   });
@@ -223,7 +246,12 @@ exports.legal = function(req, res) {
       }
       res.render('legal', {
         login: login_id,
-        mapdata: JSON.stringify(data)
+        mapdata: JSON.stringify(data),
+        partials: {
+          "head": "head",
+          "navbar": "navbar",
+          "footer": "footer"
+        }
       });
     });
   });
@@ -302,7 +330,13 @@ exports.advancedSearch = function(req, res) {
         periods: result.periods, 
         epochs: result.epochs, 
         stages: result.stages, 
-        mapdata: JSON.stringify(result.mapdata)});
+        mapdata: JSON.stringify(result.mapdata),
+        partials: {
+          "head": "head",
+          "navbar": "navbar",
+          "footer": "footer"
+        }
+      });
     });
   });
 }
@@ -366,7 +400,12 @@ exports.upload = function(req, res) {
         login: login_id, 
         groups: result.groups, 
         formations: result.formations, 
-        members: result.members
+        members: result.members,
+        partials: {
+          "head": "head",
+          "navbar": "navbar",
+          "footer": "footer"
+        }
       });
     });
   });
@@ -437,7 +476,12 @@ exports.editRecord = function(req, res) {
         taxa: JSON.stringify(result.taxa), 
         groups: result.groups, 
         formations: result.formations, 
-        members: result.members
+        members: result.members,
+        partials: {
+          "head": "head",
+          "navbar": "navbar",
+          "footer": "footer"
+        }
       });
     });
   });
@@ -533,7 +577,11 @@ exports.viewrecord = function(req, res) {
           login: login_id, 
           result: result.result, 
           mapdata: JSON.stringify(result.mapdata), 
-          comments: result.photoComments
+          comments: result.photoComments,
+          partials: {
+            "navbar": "navbar",
+            "footer": "footer"
+          }
         });
       }
   
@@ -623,7 +671,12 @@ exports.searchApp = function(req, res) {
 
           res.render('searchResults', {
             limits: limit, 
-            pages: pages
+            pages: pages,
+            partials: {
+              "head": "head_leaflet",
+              "navbar": "navbar",
+              "footer": "footer"
+            }
           });
         } else {
           var limitb = req.session.hits,
@@ -796,7 +849,12 @@ exports.searchApp = function(req, res) {
           "result": result, 
           "limits": limit, 
           "pages": pages, 
-          "mapdata": JSON.stringify(mapdata)
+          "mapdata": JSON.stringify(mapdata),
+          "partials": {
+            "head": "head_leaflet",
+            "navbar": "navbar",
+            "footer": "footer"
+          }
         });
       }
     });
@@ -836,7 +894,12 @@ exports.simpleSearch = function(req, res) {
           connection.release();
           res.render('searchResults', {
             limits: limit, 
-            pages: pages
+            pages: pages,
+            partials: {
+              "head": "head_leaflet",
+              "navbar": "navbar",
+              "footer": "footer"
+            }
           });
         } else {
           var limitb = req.session.hits,
@@ -1015,7 +1078,12 @@ exports.simpleSearch = function(req, res) {
           "result": result, 
           "limits": limit, 
           "pages": pages, 
-          "mapdata": JSON.stringify(mapdata)
+          "mapdata": JSON.stringify(mapdata),
+          "partials": {
+            "head": "head_leaflet",
+            "navbar": "navbar",
+            "footer": "footer"
+          }
         });
       }
     });
@@ -1161,7 +1229,12 @@ exports.searchRecent = function(req, res) {
           "result": results, 
           "limits": limit, 
           "pages": pages, 
-          "mapdata": JSON.stringify(mapdata)
+          "mapdata": JSON.stringify(mapdata),
+          "partials": {
+            "head": "head_leaflet",
+            "navbar": "navbar",
+            "footer": "footer"
+          }
         });
       }
     });
@@ -1398,7 +1471,12 @@ function processQuery(params, req, res, page) {
             
             res.render('searchResults', {
               limits: limit, 
-              pages: pages
+              pages: pages,
+              partials: {
+                "head": "head_leaflet",
+                "navbar": "navbar",
+                "footer": "footer"
+              }
             });
           } else {
             var limitb = records[0].count,
@@ -1582,7 +1660,12 @@ function processQuery(params, req, res, page) {
           "result": result,
           "limits": limit, 
           "pages": pages, 
-          "mapdata": JSON.stringify(mapdata)
+          "mapdata": JSON.stringify(mapdata),
+          "partials": {
+            "head": "head_leaflet",
+            "navbar": "navbar",
+            "footer": "footer"
+          }
         });
       }
     });

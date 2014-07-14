@@ -378,7 +378,14 @@ exports.upload = function(req, res) {
           "location": location,
           "login": login_id
         }];
-        res.render('uploadSuccess', {photoInfo: photo});
+        res.render('uploadSuccess', {
+          photoInfo: photo,
+          partials: {
+            "head": "head",
+            "navbar": "navbar",
+            "footer": "footer"
+          }
+        });
       }
     });
   });
@@ -652,7 +659,12 @@ exports.simpleSearch = function(req, res) {
           var pages = [];
           connection.release();
           res.render('searchResults', {
-            limits: limit, pages: pages
+            limits: limit, pages: pages,
+            partials: {
+              "head": "head_leaflet",
+              "navbar": "navbar",
+              "footer": "footer"
+            }
           });
         } else {
           var searchTerm = req.body.query;
@@ -726,7 +738,12 @@ exports.simpleSearch = function(req, res) {
             connection.release();
             res.render('searchResults', {
               limits: limit, 
-              pages: pages
+              pages: pages,
+              partials: {
+                "head": "head_leaflet",
+                "navbar": "navbar",
+                "footer": "footer"
+              }
             });
           } else {
             var limitb = rows[0].count,
@@ -910,7 +927,12 @@ exports.simpleSearch = function(req, res) {
         "result": result, 
         "limits": limit, 
         "pages": pages, 
-        "mapdata": JSON.stringify(mapdata)
+        "mapdata": JSON.stringify(mapdata),
+        "partials": {
+            "head": "head_leaflet",
+            "navbar": "navbar",
+            "footer": "footer"
+          }
       });
     });
   });
@@ -918,7 +940,7 @@ exports.simpleSearch = function(req, res) {
 
 // Router for all queries from the search box
 exports.searchPost = function(req, res) {
-  connection.getConnection(function(err, connection) {
+  connection.getConnection(function(err, connection) { 
     async.waterfall([
       // Build the query - via Shanan's PHP code
       function(callback) {
@@ -1127,7 +1149,12 @@ exports.searchPost = function(req, res) {
             connection.release();
             res.render('searchResults', {
               limits: limit, 
-              pages: pages
+              pages: pages,
+              partials: {
+                "head": "head_leaflet",
+                "navbar": "navbar",
+                "footer": "footer"
+              }
             });
           } else {
             // Start processing the query
@@ -1166,7 +1193,12 @@ exports.searchPost = function(req, res) {
               res.render('searchResults', {
                 login: login_id, 
                 limits: limit, 
-                pages: pages
+                pages: pages,
+                partials: {
+                  "head": "head_leaflet",
+                  "navbar": "navbar",
+                  "footer": "footer"
+                }
               });
             } else {
               var limitb = records[0].count,
@@ -1357,7 +1389,12 @@ exports.searchPost = function(req, res) {
           "result": result, 
           "limits": limit, 
           "pages": pages, 
-          "mapdata": JSON.stringify(mapdata)
+          "mapdata": JSON.stringify(mapdata),
+          "partials": {
+            "head": "head_leaflet",
+            "navbar": "navbar",
+            "footer": "footer"
+          }
         });
       }
 
