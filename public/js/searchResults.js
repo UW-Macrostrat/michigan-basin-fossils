@@ -83,11 +83,12 @@ function init() {
   function fillTemplate(item) {
     var result = {"pbData": pbData};
 
-    template = "{{#pbData}}<h4><a href='http://paleobiodb.org/cgi-bin/bridge.pl?action=checkTaxonInfo&taxon_name={{nam}}'>{{nam}}</a></h4><p>{{#att}}<strong>Named: </strong>{{att}}<br>{{/att}}{{^att}}{{/att}}{{#fea}}<strong>First appearance: </strong>{{fea}} ({{fla}})<br>{{/fea}}{{^fea}}{{/fea}}{{#lea}}<strong>Last appearance: </strong>{{lea}} ({{lla}})<br>{{/lea}}{{^lea}}{{/lea}}{{#sta}}<strong>Taxonomic status: </strong>{{sta}}<br>{{/sta}}{{^sta}}{{/sta}}{{#ext}}<strong>ext: </strong>{{ext}}<br><br>{{/ext}}{{^ext}}{{/ext}}{{#clt}}<strong>Class: </strong>{{clt.nam}}<br>{{/clt}}{{^clt}}{{/clt}}{{#odt}}<strong>Order: </strong>{{odt.nam}}<br>{{/odt}}{{^odt}}{{/odt}}{{#fmt}}<strong>Family: </strong>{{fmt.nam}}<br>{{/fmt}}{{^fmt}}{{/fmt}}</p>{{/pbData}}{{^pbData}}<p>PaleoDB data unavailable</p>{{/pbData}}";
+    template = "{{#pbData}}<h4><a href='http://paleobiodb.org/cgi-bin/bridge.pl?action=checkTaxonInfo&taxon_name={{nam}}'>{{nam}}</a></h4><p>{{#att}}<strong>Named: </strong>{{att}}<br>{{/att}}{{^att}}{{/att}}{{#fea}}<strong>First appearance: </strong>{{fea}} ({{fla}})<br>{{/fea}}{{^fea}}{{/fea}}{{#lea}}<strong>Last appearance: </strong>{{lea}} ({{lla}})<br>{{/lea}}{{^lea}}{{/lea}}{{#sta}}<strong>Taxonomic status: </strong>{{sta}}<br>{{/sta}}{{^sta}}{{/sta}}{{#ext}}<strong>ext: </strong>{{ext}}<br><br>{{/ext}}{{^ext}}{{/ext}}{{#clt}}<strong>Class: </strong><a href='#' class='pbdb_link'>{{clt.nam}}</a><br>{{/clt}}{{^clt}}{{/clt}}{{#odt}}<strong>Order: </strong><a href='#' class='pbdb_link'>{{odt.nam}}</a><br>{{/odt}}{{^odt}}{{/odt}}{{#fmt}}<strong>Family: </strong><a href='#' class='pbdb_link'>{{fmt.nam}}</a><br>{{/fmt}}{{^fmt}}{{/fmt}}</p>{{/pbData}}{{^pbData}}<p>PaleoDB data unavailable</p>{{/pbData}}";
 
     templateHTML = Mustache.to_html(template, result);
 
     $(item).html(templateHTML);
+    bindLink();
 }
   
   $('.deepblueInfo').on('click', function() {
@@ -461,6 +462,18 @@ function checkSearch() {
     document.getElementById("searchForm").submit();
     return true;
   }
+}
+
+function bindLink() {
+  $('.pbdb_link').off('click');
+  $('.pbdb_link').click(function(event) {
+    event.preventDefault();
+    console.log(event.target.innerHTML);
+    $.post("http://localhost:8080/search", { t1: event.target.innerHTML })
+      .done(function(res) {
+        window.location = "/search?page=1";
+      });
+  });
 }
 
 var rankMap = { 25: "unranked", 23: "kingdom", 22: "subkingdom",

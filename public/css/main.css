@@ -263,6 +263,9 @@ select, input[type="file"] {
   #statBar {
     margin-top:157px;
   }
+  .row-fluid {
+    padding-top: 55px;
+  }
 }
 
 @media (max-width:767px) {

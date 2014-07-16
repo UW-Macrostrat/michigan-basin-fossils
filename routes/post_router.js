@@ -1113,9 +1113,9 @@ exports.searchPost = function(req, res) {
 
           if (req.body.t1) {
             if (typeof where !== 'undefined'){
-              where += " and taxa.taxon LIKE '%" + req.body.t1 + "%'";
+              where += " and taxa.taxon LIKE '%" + req.body.t1 + "%' OR taxa.pbdb_phylum LIKE '%" + req.body.t1 + "%' OR taxa.pbdb_class LIKE '%" + req.body.t1 + "%' OR taxa.pbdb_order LIKE '%" + req.body.t1 + "%' OR taxa.pbdb_family LIKE '%" + req.body.t1 + "%'";
             } else {
-              where = "taxa.taxon LIKE '%" + req.body.t1 + "%'";
+              where = "taxa.taxon LIKE '%" + req.body.t1 + "%' OR taxa.pbdb_phylum LIKE '%" + req.body.t1 + "%' OR taxa.pbdb_class LIKE '%" + req.body.t1 + "%' OR taxa.pbdb_order LIKE '%" + req.body.t1 + "%' OR taxa.pbdb_family LIKE '%" + req.body.t1 + "%'";
             }
           }
 
