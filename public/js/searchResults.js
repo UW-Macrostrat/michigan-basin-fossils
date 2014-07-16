@@ -469,7 +469,7 @@ function bindLink() {
   $('.pbdb_link').click(function(event) {
     event.preventDefault();
     console.log(event.target.innerHTML);
-    $.post("http://localhost:8080/search", { t1: event.target.innerHTML })
+    $.post("/search", { t1: event.target.innerHTML })
       .done(function(res) {
         window.location = "/search?page=1";
       });
