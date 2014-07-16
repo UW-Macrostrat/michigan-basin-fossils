@@ -27,6 +27,7 @@ public/scripts/
 uploads/*
 shapefiles
 dump*
+setup.txt
 
 .DS_Store
 .AppleDouble

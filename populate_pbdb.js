@@ -41,12 +41,11 @@ mysqlConn.getConnection(function(err, connection) {
           });
         });
       }, function(err) {
+        connection.release();
         if (err) {
           console.log(err);
-          connection.release();
           process.exit(code=1);
         } else {
-          connection.release();
           console.log("Done!");
           process.exit(code=0);
         }
