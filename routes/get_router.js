@@ -64,60 +64,60 @@ exports.root = function(req, res) {
   });
 }
 
-/*connection.getConnection(function(err, connection) {
-    async.parallel({
-      one: function(callback) {
-        connection
-      },
-      two: function(callback) {
-
-      },
-      three: function(callback) {
-
-      },
-      four: function(callback) {
-
-      },
-      five: function(callback) {
-
-      }
-    }, 
-    function(error, result) {
-      connection.release();
-    });
-  });
-*/
 exports.autocomplete = function(req, res) {
   connection.getConnection(function(err, connection) {
     async.parallel({
       one: function(callback) {
         connection.query('SELECT DISTINCT taxon AS label, "Taxa" as category FROM taxa WHERE taxon LIKE ?', [req.query.q + "%"], function(err, rows, fields) {
-          callback(null, rows);
+          if (err) {
+            callback(err);
+          } else {
+            callback(null, rows);
+          }
         });
       },
       two: function(callback) {
         connection.query('SELECT DISTINCT species AS label, "Species" as category FROM taxa WHERE species like ? ', [req.query.q + "%"], function(err, rows, fields) {
-          callback(null, rows);
+          if (err) {
+            callback(err);
+          } else {
+            callback(null, rows);
+          }
         });
       },
       three: function(callback) {
         connection.query('SELECT DISTINCT stage AS label, "Time" as category FROM chron WHERE stage like ?', [req.query.q + "%"], function(err, rows, fields) {
-          callback(null, rows);
+          if (err) {
+            callback(err);
+          } else {
+            callback(null, rows);
+          }
         });
       },
       four: function(callback) {
         connection.query('SELECT DISTINCT unit AS label, "Strat" as category FROM strat WHERE unit like ? ', [req.query.q + "%"], function(err, rows, fields) {
-          callback(null, rows);
+          if (err) {
+            callback(err);
+          } else {
+            callback(null, rows);
+          }
         });
       },
       five: function(callback) {
         connection.query('SELECT DISTINCT name AS label, "Users" as category FROM users WHERE name like ? ', ["%" + req.query.q + "%"], function(err, rows, fields) {
-          callback(null, rows);
+          if (err) {
+            callback(err);
+          } else {
+            callback(null, rows);
+          }
         });
       }
     }, 
     function(error, result) {
       connection.release();
+      if (error) {
+        console.log("autocomplete - ", error);
+      }
       var data = result.one.concat(result.two, result.three, result.four, result.five);
       res.jsonp(data);
     });
@@ -313,30 +313,34 @@ exports.advancedSearch = function(req, res) {
     }, 
     function(error, result) {
       connection.release();
-
-      if (typeof req.session.user_id == 'undefined') {
-        var login_id = [];
+      if (error) {
+        console.log("advancedSearch - ", error);
+        res.redirect("/");
       } else {
-        var login_id = [{"username": req.session.user_id, "full_name": req.session.full_name}];
-      }
-      res.render('advancedSearch', {
-        login: result.login_id, 
-        counties: result.counties, 
-        users: result.users, 
-        ommenters: result.commenters, 
-        groups: result.groups, 
-        formations: result.formations, 
-        members: result.members, 
-        periods: result.periods, 
-        epochs: result.epochs, 
-        stages: result.stages, 
-        mapdata: JSON.stringify(result.mapdata),
-        partials: {
-          "head": "head",
-          "navbar": "navbar",
-          "footer": "footer"
+        if (typeof req.session.user_id == 'undefined') {
+          var login_id = [];
+        } else {
+          var login_id = [{"username": req.session.user_id, "full_name": req.session.full_name}];
         }
-      });
+        res.render('advancedSearch', {
+          login: result.login_id, 
+          counties: result.counties, 
+          users: result.users, 
+          ommenters: result.commenters, 
+          groups: result.groups, 
+          formations: result.formations, 
+          members: result.members, 
+          periods: result.periods, 
+          epochs: result.epochs, 
+          stages: result.stages, 
+          mapdata: JSON.stringify(result.mapdata),
+          partials: {
+            "head": "head",
+            "navbar": "navbar",
+            "footer": "footer"
+          }
+        });
+      }
     });
   });
 }
@@ -345,6 +349,9 @@ exports.getCounties = function(req, res) {
   connection.getConnection(function(err, connection) {
     connection.query('SELECT DISTINCT county from locals_mod2 WHERE state = ? ORDER BY county ASC', [req.query.state], function(error, data) {
       connection.release();
+      if (error) {
+        console.log("getCounties - ", error);
+      }
       res.jsonp(data);
     });
   });
@@ -354,6 +361,9 @@ exports.getCities = function(req, res) {
   connection.getConnection(function(err, connection) {
     connection.query('SELECT city from locals_mod2 WHERE state = ? && county = ? ORDER BY city ASC', [req.query.state, req.query.county], function(error, data) {
       connection.release();
+      if (error) {
+        console.log("getCities - ", error);
+      }
       res.jsonp(data);
     });
   });
@@ -363,6 +373,9 @@ exports.verifyTaxa = function(req, res) {
   connection.getConnection(function(err, connection) {
     connection.query('SELECT class AS tclass FROM JJS_genera WHERE genus = ?', [req.query.genus], function(error, data) {
       connection.release();
+      if (error) {
+        console.log("verifyTaxa - ", error);
+      }
       res.jsonp(data);
     });
   });
@@ -373,23 +386,37 @@ exports.upload = function(req, res) {
     async.parallel({
       groups: function(callback) {
         connection.query('SELECT id, unit FROM strat WHERE rank = "Gr" ORDER BY unit ASC', function(err, rows, fields) {
-          callback(null, rows);
+          if (err) {
+            callback(err);
+          } else {
+            callback(null, rows);
+          }
         });
       },
       formations: function(callback) {
         connection.query('SELECT id, unit FROM strat WHERE rank = "Fm" ORDER BY unit ASC', function(err, rows, fields) {
-          callback(null, rows);
+          if (err) {
+            callback(err);
+          } else {
+            callback(null, rows);
+          }
         });
       },
       members: function(callback) {
         connection.query('SELECT id, unit FROM strat WHERE rank = "Mb" ORDER BY unit ASC', function(err, rows, fields) {
-          callback(null, rows);
+          if (err) {
+            callback(err);
+          } else {
+            callback(null, rows);
+          }
         });
       }
     }, 
     function(error, result) {
       connection.release();
-
+      if (error) {
+        console.log("upload - ", error);
+      }
       if (typeof req.session.user_id == 'undefined') {
         var login_id = [];
       } else {
@@ -416,44 +443,62 @@ exports.editRecord = function(req, res) {
     async.parallel({
       check: function(callback) {
         connection.query('SELECT DISTINCT photos.id, users.name FROM photos LEFT OUTER JOIN userlog ON userlog.login = photos.login_id LEFT OUTER JOIN users ON users.username = userlog.name WHERE photos.id = ?', [req.params.id], function(err, rows, fields) {
-          if (err) {console.log(err)};
-          if (rows[0].name != req.session.full_name) {
-            console.log("wrong name");
-            callback(rows[0].name, null)
+          if (err) {
+            callback(err);
           } else {
-            callback(null, rows[0].name);
+            if (rows[0].name != req.session.full_name) {
+              console.log("wrong name");
+              callback(rows[0].name, null)
+            } else {
+              callback(null, rows[0].name);
+            }
           }
         });
       },
       members: function(callback) {
         connection.query('SELECT id, unit FROM strat WHERE rank = "Mb" ORDER BY unit ASC', function(err, rows, fields) {
-          if (err) {console.log(err)};
-          callback(null, rows);
+          if (err) {
+            callback(err);
+          } else {
+            callback(null, rows);
+          }
         });
       },
       formations: function(callback) {
         connection.query('SELECT id, unit FROM strat WHERE rank = "Fm" ORDER BY unit ASC', function(err, rows, fields) {
-          if (err) {console.log(err)};
-          callback(null, rows);
+          if (err) {
+            callback(err);
+          } else {
+            callback(null, rows);
+          }
         });
       },
       groups: function(callback) {
         connection.query('SELECT id, unit FROM strat WHERE rank = "Gr" ORDER BY unit ASC', function(err, rows, fields) {
-          if (err) {console.log(err)};
-          callback(null, rows);
+          if (err) {
+            callback(err);
+          } else {
+            callback(null, rows);
+          }
         });
       },
       taxa: function(callback) {
         connection.query('SELECT taxon, taxon_reso, species, species_reso FROM taxa where photo_id = ?', [req.params.id], function(err, rows, fields) {
-          if (err) {console.log(err)};
-          callback(null, rows);
+          if (err) {
+            callback(err);
+          } else {
+            callback(null, rows);
+          }
         });
       },
       result: function(callback) {
         connection.query("SELECT DISTINCT photos.id, photos.title, photos.image_type, photos.ummp, photos.strat_id, photos.type_specimen, DATE_FORMAT( photos.DATE,  '%Y-%m-%d' ) AS date, locals_mod2.city, locals_mod2.county, locals_mod2.state, strat.unit, LOWER(strat.rank) as rank, users.name, photo_notes.notes FROM photos LEFT OUTER JOIN locals_mod2 ON locals_mod2.id = photos.local_id LEFT OUTER JOIN strat ON strat.id = photos.strat_id LEFT OUTER JOIN userlog ON userlog.login = photos.login_id LEFT OUTER JOIN users ON users.username = userlog.name LEFT OUTER JOIN photo_notes ON photo_notes.photo_id = photos.id WHERE photos.id = ?", [req.params.id],
           function(err, rows, fields) {
-            if (err) {console.log(err)};
-            callback(null, rows);
+            if (err) {
+              callback(err);
+            } else {
+              callback(null, rows);
+            }
         });
       }
     }, 
@@ -461,6 +506,7 @@ exports.editRecord = function(req, res) {
       connection.release();
 
       if (error) {
+        console.log("editRecord - ", error);
         res.send('You are not authorized to edit this record');
       }
 
@@ -522,25 +568,27 @@ exports.viewrecord = function(req, res) {
         connection.query("SELECT COUNT(photos.local_id) as photos, locals_mod2.county_fips as fips FROM photos LEFT OUTER JOIN locals_mod2 ON locals_mod2.id = photos.local_id LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id WHERE photos.id = ? GROUP BY locals_mod2.county_fips", [req.params.id], function(err, data) {
           if (err) {
             callback(err);
+          } else {
+            callback(null, data);
           }
-          callback(null, data);
         });
       },
       photoComments: function(callback) {
         connection.query("SELECT photo_comments.id, photo_comments.comments, photo_comments.photo_id, DATE_FORMAT( photo_comments.post_time, '%M %d, %Y at %l:%i %p' ) AS post_time, users.name FROM photo_comments LEFT OUTER JOIN userlog ON userlog.login = photo_comments.login_id LEFT OUTER JOIN users ON users.username = userlog.name LEFT OUTER JOIN photos on photos.id = photo_comments.photo_id WHERE photo_comments.photo_id = ?", [req.params.id], function(err, rows, fields) {
           if (err) {
             callback(err);
-          }
-          var photoComments = rows;
+          } else {
+            var photoComments = rows;
 
-          // Check if any of the comments belong to the logged in user
-          for (var i=0;i<photoComments.length;i++) {
-            if (photoComments[i].name == req.session.full_name) {
-              photoComments[i].belongs_to = 'true';
+            // Check if any of the comments belong to the logged in user
+            for (var i=0;i<photoComments.length;i++) {
+              if (photoComments[i].name == req.session.full_name) {
+                photoComments[i].belongs_to = 'true';
+              }
             }
-          }
 
-          callback(null, photoComments);
+            callback(null, photoComments);
+          }
         });
       },
       result: function(callback) {
@@ -565,6 +613,7 @@ exports.viewrecord = function(req, res) {
     function(error, result) {
       connection.release();
       if (error) {
+        console.log("viewrecord - ", error);
         res.redirect("/");
       } else {
         if (typeof req.session.user_id == 'undefined') {
@@ -596,20 +645,24 @@ exports.findByCounty = function(req, res) {
 
   connection.getConnection(function(err, connection) {
     if (typeof req.session.query === 'undefined') {
-      connection.query("SELECT DISTINCT photos.id, photos.title, users.name, (SELECT GROUP_CONCAT(' ', taxon, ' ', species) from taxa WHERE taxa.photo_id = photos.id) as taxon FROM photos LEFT OUTER JOIN locals_mod2 ON locals_mod2.id = photos.local_id LEFT OUTER JOIN userlog ON userlog.login = photos.login_id LEFT OUTER JOIN users ON users.username = userlog.name LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id WHERE locals_mod2.county_fips = " + req.params.id + " LIMIT " + req.query.limit + ", 20", function(err, rows, fields) {
-        if (err) {
-          res.send('500: Internal Server Error <br> Error retrieving counties', 500);
-        }
+      connection.query("SELECT DISTINCT photos.id, photos.title, users.name, (SELECT GROUP_CONCAT(' ', taxon, ' ', species) from taxa WHERE taxa.photo_id = photos.id) as taxon FROM photos LEFT OUTER JOIN locals_mod2 ON locals_mod2.id = photos.local_id LEFT OUTER JOIN userlog ON userlog.login = photos.login_id LEFT OUTER JOIN users ON users.username = userlog.name LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id WHERE locals_mod2.county_fips = ? LIMIT " + req.query.limit + ", 20", [req.params.id], function(err, rows, fields) {
         connection.release();
-        res.jsonp(rows);
+        if (err) {
+          console.log("findByCounty - ", err);
+          res.jsonp([]);
+        } else {
+          res.jsonp(rows);
+        }
       });
     } else {
-      connection.query("SELECT DISTINCT photos.id, photos.title, users.name, (SELECT GROUP_CONCAT(' ', taxon, ' ', species) from taxa WHERE taxa.photo_id = photos.id) as taxon FROM photos LEFT OUTER JOIN locals_mod2 ON locals_mod2.id = photos.local_id LEFT OUTER JOIN userlog ON userlog.login = photos.login_id LEFT OUTER JOIN users ON users.username = userlog.name LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id WHERE " + req.session.query + " AND locals_mod2.county_fips = " + req.params.id + " LIMIT " + req.query.limit + ", 20", function(err, rows, fields) {
-        if (err) {
-          res.send('500: Internal Server Error <br> Error retrieving counties', 500);
-        }
+      connection.query("SELECT DISTINCT photos.id, photos.title, users.name, (SELECT GROUP_CONCAT(' ', taxon, ' ', species) from taxa WHERE taxa.photo_id = photos.id) as taxon FROM photos LEFT OUTER JOIN locals_mod2 ON locals_mod2.id = photos.local_id LEFT OUTER JOIN userlog ON userlog.login = photos.login_id LEFT OUTER JOIN users ON users.username = userlog.name LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id WHERE " + req.session.query + " AND locals_mod2.county_fips = ? LIMIT " + req.query.limit + ", 20", [req.params.id], function(err, rows, fields) {
         connection.release();
-        res.jsonp(rows);
+        if (err) {
+          console.log("findByCounty - ", err);
+          res.jsonp([]);
+        } else {
+          res.jsonp(rows);
+        }
       });
     }
   });
@@ -653,7 +706,7 @@ exports.searchApp = function(req, res) {
         } else {
           // If no URL params besides page, fall back to session cookie
           var query = req.session.query;
-          console.log("Just page specified - fall back to cookie");
+
           callback(null, page, query);
         }
       },
@@ -836,7 +889,7 @@ exports.searchApp = function(req, res) {
     ], function(error, result, limit, pages, mapdata) {
       connection.release();
       if (error) {
-        console.log(error);
+        console.log("searchApp - ", error);
         res.redirect("/");
       } else {
         if (typeof req.session.user_id == 'undefined') {
@@ -863,7 +916,6 @@ exports.searchApp = function(req, res) {
 
 // Used to process and render /search routes AFTER the initial POST (never called first, except for Phylum from homepage)
 exports.simpleSearch = function(req, res) {
-  console.log("simpleSearch");
   connection.getConnection(function(err, connection) {
     async.waterfall([
       function(callback) {
@@ -1064,7 +1116,7 @@ exports.simpleSearch = function(req, res) {
       connection.release();
 
       if (error) {
-        console.log(error)
+        console.log("simpleSearch - ", error);
         res.redirect("/");
       } else {
         if (typeof req.session.user_id == 'undefined') {
@@ -1215,7 +1267,7 @@ exports.searchRecent = function(req, res) {
       connection.release();
 
       if (error) {
-        console.log(error)
+        console.log("searchRecent - ", error);
         res.redirect("/");
       } else {
         if (typeof req.session.user_id == 'undefined') {
@@ -1637,16 +1689,17 @@ function processQuery(params, req, res, page) {
         connection.query("SELECT DISTINCT photos.id, photos.title, photos.ummp, photos.type_specimen, DATE_FORMAT( photos.DATE,  '%Y-%m-%d' ) AS date, locals_mod2.city, locals_mod2.county, locals_mod2.state, strat.unit, LOWER(strat.rank) as rank, users.name, photo_notes.notes, (SELECT GROUP_CONCAT(' ', taxon, ' ', species) from taxa WHERE taxa.photo_id = photos.id) as taxa FROM photos LEFT OUTER JOIN locals_mod2 ON locals_mod2.id = photos.local_id LEFT OUTER JOIN strat ON strat.id = photos.strat_id LEFT OUTER JOIN userlog ON userlog.login = photos.login_id LEFT OUTER JOIN users ON users.username = userlog.name LEFT OUTER JOIN photo_notes ON photo_notes.photo_id = photos.id LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id WHERE " + query + " LIMIT " + limita + ",20", function(err, rows, fields) {
           if (err) {
             callback(err);
+          } else {
+            var result = rows;
+            callback(null, result, limit, pages, mapdata);
           }
-          var result = rows;
-          callback(null, result, limit, pages, mapdata);
         });
       }
 
     ], function(error, result, limit, pages, mapdata) {
       connection.release();
       if (error) {
-        console.log(error);
+        console.log("processQuery - ", error);
         res.redirect("/");
       } else {
         if (typeof req.session.user_id == 'undefined') {

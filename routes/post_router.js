@@ -27,9 +27,13 @@ exports.login = function(req, res) {
         var post = {ip: ipAddress, name: req.session.user_id, date: year + "-" + month + "-" + day, time: hours + ":" + minutes + ":" + seconds, time_start: fullDate, time_end: "0000-00-00 00:00:00"};
 
         connection.query('INSERT INTO userlog SET ?', post, function(err, rows, fields) {
-          req.session.uid = rows.insertId;
           connection.release();
-          res.redirect('back');
+          if (err) {
+            console.log("Login - ", err);
+          } else {
+            req.session.uid = rows.insertId;
+            res.redirect('back');
+          }
         });
       } else {
         connection.release();
@@ -161,22 +165,24 @@ exports.upload = function(req, res) {
           location = req.body.city + ", " + req.body.county + ", " + req.body.state;
           connection.query('SELECT id FROM locals_mod2 WHERE city = ? AND county = ? AND state = ? LIMIT 1', [req.body.city, req.body.county, req.body.state], function(err, rows, fields) {
             if (err) {
-              callback(err);
               console.log(err);
+              callback(err);
+            } else {
+              // ! Add check to make sure this returned something ! //
+              var localID = rows[0].id;
+              callback(null, localID);
             }
-            // ! Add check to make sure this returned something ! //
-            var localID = rows[0].id;
-            callback(null, localID);
           });
         } else {
           location = req.body.county + ", " + req.body.state;
           connection.query('SELECT id FROM locals_mod2 WHERE county = ? AND state = ? LIMIT 1', [req.body.county, req.body.state], function(err, rows, fields) {
             if (err) {
-              callback(err);
               console.log(err);
+              callback(err);
+            } else {
+              var localID = rows[0].id;
+              callback(null, localID);
             }
-            var localID = rows[0].id;
-            callback(null, localID);
           });
         }
       },
@@ -194,11 +200,20 @@ exports.upload = function(req, res) {
         }
 
         connection.query('SELECT chron_id FROM strat WHERE id = ?', [stratID], function(err, result) {
+          if (err) {
+            callback(err);
+          }
           var chron_id = result[0].chron_id;
           connection.query('SELECT stage, belongs_to FROM chron WHERE id = ?', [chron_id], function(er, data) {
+            if (er) {
+              callback(er);
+            }
             var stage = data[0].stage;
             if (data[0].belongs_to != 0) {
               connection.query('SELECT stage FROM chron WHERE id = ?', [data[0].belongs_to], function(e, data2) {
+                if (e) {
+                  callback(e);
+                }
                 var containing_stage = data2[0].stage;
                 callback(null, localID, stratID, chron_id, stage, containing_stage);
               });
@@ -253,16 +268,18 @@ exports.upload = function(req, res) {
           connection.query('INSERT INTO photo_notes SET ?', notePost, function(err, rows, fields) {
             if (err) {
               callback(err);
+            } else {
+              callback(null, newId);
             }
-            callback(null, newId);
           });
         } else {
           var notePost = {photo_id: newId, notes: 'None'};
           connection.query('INSERT INTO photo_notes SET ?', notePost, function(err, rows, fields) {
           if (err) {
             callback(err);
+          } else {
+            callback(null, newId);
           }
-          callback(null, newId);
           });
         }
       },
@@ -275,6 +292,9 @@ exports.upload = function(req, res) {
               sres = "sres" + i;
 
           connection.query('SELECT class AS tclass FROM JJS_genera WHERE genus = ?', [req.body[t]], function(err, rows, fields) {
+            if (err) {
+              callback(err);
+            }
             if (rows.length > 0) {
               var classID = rows[0].tclass;
             } else {
@@ -292,6 +312,9 @@ exports.upload = function(req, res) {
             };
 
             connection.query('INSERT INTO taxa SET ?', taxaPost, function(err, rows, fields) {
+              if (err) {
+                callback(err);
+              }
               console.log("Inserted into taxa");
             });
           });
@@ -309,8 +332,8 @@ exports.upload = function(req, res) {
         // move the file from the temporary location to the intended location
         fs.rename(tmp_path, target_path, function(err) {
             if (err) {
-              callback(err);
               console.log("Error renaming new image - ", err);
+              callback(err);
             }
             else {
               // delete the temporary file, so that the explicitly set temporary upload dir does not get filled with unwanted files
@@ -323,27 +346,27 @@ exports.upload = function(req, res) {
               // Create medium sized version
               easyimg.resize({src:config.imagePath + 'full/' + newId + '.jpg', dst:config.imagePath + 'main/' + newId + '.jpg', width:450}, function(err, image) {
                if (err) {
-                  callback(err);
                   console.log("Error converting to medium sized version - ", err);
+                  callback(err);
                 } else {
                   // Create thumbnail version
                   easyimg.resize({src:config.imagePath + 'full/' + newId + '.jpg', dst:config.imagePath + 'thumbs/' + newId + '.jpg', width:60}, function(err, image) {
                     if (err) {
-                      callback(err);
                       console.log("Error creating thumbnail version - ", err);
+                      callback(err);
                     // If a watermark is requested, add it
                     } else if(req.body.watermark) {
                       // Add watermark to full sized version
                       easyimg.convert({src:config.imagePath + 'full/' + newId + '.jpg', dst:config.imagePath + 'full/' + newId + '.jpg', label: req.session.full_name, size: '55'}, function(err, image) {
                         if (err) {
-                          callback(err);
                           console.log("Error adding watermark to full sized version - ", err);
+                          callback(err);
                         } else {
                           // Add watermark to medium sized version
                           easyimg.convert({src:config.imagePath + 'main/' + newId + '.jpg', dst:config.imagePath + 'main/' + newId + '.jpg', label: req.session.full_name, size: '15'}, function(err, image) {
                             if (err) {
-                              callback(err);
                               console.log("Error adding watermark to medium version - ", err);
+                              callback(err);
                             } else {
                               callback(null, newId);
                             }
@@ -362,7 +385,8 @@ exports.upload = function(req, res) {
     ], function(error, newId) {
       connection.release();
       if (error) {
-        res.send("Something went wrong - ", error);
+        console.log("upload - ", error);
+        res.redirect("/");
       } else {
         if (typeof req.session.user_id == 'undefined') {
           var login_id = [];
@@ -435,11 +459,20 @@ exports.editRecord = function(req, res) {
         }
 
         connection.query('SELECT chron_id FROM strat WHERE id = ?', [stratID], function(err, result) {
+          if (err) {
+            callback(err);
+          }
           var chron_id = result[0].chron_id;
           connection.query('SELECT stage, belongs_to FROM chron WHERE id = ?', [chron_id], function(er, data) {
+            if (er) {
+              callback(er);
+            }
             var stage = data[0].stage;
             if (data[0].belongs_to != 0) {
               connection.query('SELECT stage FROM chron WHERE id = ?', [data[0].belongs_to], function(e, data2) {
+                if (e) {
+                  callback(e);
+                }
                 var containing_stage = data2[0].stage;
                 callback(null, localID, stratID, chron_id, stage, containing_stage);
               });
@@ -494,16 +527,18 @@ exports.editRecord = function(req, res) {
           connection.query('UPDATE photo_notes SET ? WHERE photo_id = ?', [notePost, picID], function(err, rows, fields) {
             if (err) {
               callback(err);
+            } else {
+              callback(null, picID);
             }
-            callback(null, picID);
           });
         } else {
           var notePost = {photo_id: picID, notes: 'None'};
           connection.query('UPDATE photo_notes SET ? WHERE photo_id = ?', [notePost, picID], function(err, rows, fields) {
-          if (err) {
-            callback(err);
-          }
-          callback(null, picID);
+            if (err) {
+              callback(err);
+            } else {
+              callback(null, picID);
+            }
           });
         }
       },
@@ -516,33 +551,41 @@ exports.editRecord = function(req, res) {
               sres = "sres" + i;
 
           connection.query('SELECT class AS tclass FROM JJS_genera WHERE genus = ?', [req.body[t]], function(err, rows, fields) {
-            if (rows.length > 0) {
-              var classID = rows[0].tclass;
+            if (err) {
+              callback(err);
             } else {
-              var classID = 0;
-            }
-
-            // Clean up old taxa
-            connection.query('DELETE FROM taxa WHERE photo_id = ?', [picID], function(err, rows, fields) {
-              if (err) {
-                callback(err);
-                console.log("Error deleting old taxa: ", err);
+              if (rows.length > 0) {
+                var classID = rows[0].tclass;
+              } else {
+                var classID = 0;
               }
-            });
 
-            var taxaPost = {
-              photo_id: picID, 
-              taxon: req.body[t], 
-              taxon_reso: req.body[tres], 
-              species: req.body[s], 
-              species_reso: req.body[sres], 
-              class_id: classID, 
-              login_id: req.session.uid
-            };
+              // Clean up old taxa
+              connection.query('DELETE FROM taxa WHERE photo_id = ?', [picID], function(err, rows, fields) {
+                if (err) {
+                  callback(err);
+                }
+              });
 
-            connection.query('INSERT INTO taxa SET ?', taxaPost, function(err, rows, fields) {
-              console.log("Inserted into taxa");
-            });
+              var taxaPost = {
+                photo_id: picID, 
+                taxon: req.body[t], 
+                taxon_reso: req.body[tres], 
+                species: req.body[s], 
+                species_reso: req.body[sres], 
+                class_id: classID, 
+                login_id: req.session.uid
+              };
+
+              connection.query('INSERT INTO taxa SET ?', taxaPost, function(err, rows, fields) {
+                if (err) {
+                  callback(err);
+                } else {
+                  console.log("Inserted into taxa");
+                }
+              });
+            }
+  
           });
         }
         callback(null, picID);
@@ -554,18 +597,16 @@ exports.editRecord = function(req, res) {
           fs.unlink(config.imagePath + 'full/' + req.body.record + '.jpg', function(err) {
             if (err) {
               callback(err);
-              console.log("error deleting old full sized image - ", err);
             }
           });
           fs.unlink(config.imagePath + 'main/' + req.body.record + '.jpg', function(err) {
             if (err) {
               callback(err);
-              console.log("error deleting old main image - ", err);
             }
           });
           fs.unlink(config.imagePath + 'thumbs/' + req.body.record + '.jpg', function(err) {
             if (err) {
-              console.log("error deleting old thumbnail image - ", err);
+              callback(err);
             }
           });
 
@@ -578,21 +619,19 @@ exports.editRecord = function(req, res) {
           fs.rename(tmp_path, target_path, function(err) {
               if (err) {
                 callback(err);
-                console.log(err);
               }
               // delete the temporary file, so that the explicitly set temporary upload dir does not get filled with unwanted files
               fs.unlink(tmp_path, function(err) {
                 if (err) {
                   callback(err);
-                  console.log(err);
                 }
               });
 
               // Create medium sized version
               easyimg.resize({src: config.imagePath + 'full/' + picID + '.jpg', dst: config.imagePath + 'main/' + picID + '.jpg', width:450}, function(err, image) {
                if (err) {
-                  console.log("error creating new medium sized image", err);
-                }
+                  callback(err);
+               }
               });
 
               // Create thumbnail version
@@ -607,14 +646,12 @@ exports.editRecord = function(req, res) {
                   easyimg.convert({src: config.imagePath + 'full/' + picID + '.jpg', dst: config.imagePath + 'full/' + picID + '.jpg', label: req.session.full_name, size: '55'}, function(err, image) {
                     if (err) {
                       callback(error);
-                      console.log(err);
                     }
                   });
                   // Add watermark to medium sized version
                   easyimg.convert({src: config.imagePath + 'main/' + picID + '.jpg', dst: config.imagePath + 'main/' + picID + '.jpg', label: req.session.full_name, size: '15'}, function(err, image) {
                     if (err) {
                       callback(err);
-                      console.log(err);
                     }
                     callback(null, picID);
                   });
@@ -631,12 +668,17 @@ exports.editRecord = function(req, res) {
 
     ], function(error, picID) {
       connection.release();
-      if (typeof req.session.user_id == 'undefined') {
-        var login_id = [];
+      if (error) {
+        console.log("editRecord - ", error);
+        res.redirect("/");
       } else {
-        var login_id = [{"username": req.session.user_id, "full_name": req.session.full_name}];
+        if (typeof req.session.user_id == 'undefined') {
+          var login_id = [];
+        } else {
+          var login_id = [{"username": req.session.user_id, "full_name": req.session.full_name}];
+        }
+        res.redirect('/viewrecord/' + picID);
       }
-      res.redirect('/viewrecord/' + picID);
     });
   });
 } // End editRecord
@@ -1376,7 +1418,7 @@ exports.searchPost = function(req, res) {
 
       if (error) {
         res.redirect("/");
-        console.log(error);
+        console.log("searchPost - ", error);
       } else {
         if (typeof req.session.user_id === 'undefined') {
           var login_id = [];
