@@ -41,7 +41,7 @@
       <div class="row-fluid">
         {{#result}}
         <div class="span4">
-          <h2 id="{{id}}">{{title}}</h2>{{#belongs_to}}<small class="editRecord" id="edit{{id}}">Edit record</small>{{/belongs_to}}{{^belongs_to}}{{/belongs_to}}
+          <h2 id="{{id}}">{{title}}{{#type_specimen}}*{{/type_specimen}}</h2>{{#belongs_to}}<small class="editRecord" id="edit{{id}}">Edit record</small>{{/belongs_to}}{{^belongs_to}}{{/belongs_to}}
           <p>
             <strong>Submitted by: </strong>{{name}}
             <br>
@@ -67,6 +67,10 @@
         </div>
         <div class="span8">
           <a href="/images/full/{{id}}.jpg"><img src="/images/main/{{id}}.jpg"/></a>
+          {{#type_specimen}}
+          <br>
+          <p class="type-specimen"><i>* Type specimen</i></p>
+          {{/type_specimen}}
           {{#comments.0}}
           <h3>Comments:</h3>
           {{/comments.0}}

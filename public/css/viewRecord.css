@@ -38,3 +38,8 @@ section {
 	cursor: pointer;
 	font-size: 11px;
 }
+.type-specimen {
+	text-align: center;
+	font-size: 15px;
+	padding-top: 10px;
+}
