@@ -96,7 +96,7 @@ exports.deleteRecord = function(req, res) {
   connection.getConnection(function(err, connection) {
     async.waterfall([
       function(callback) {
-        connection.query('SELECT DISTINCT photos.id, users.name FROM photos LEFT OUTER JOIN userlog ON userlog.login = photos.login_id LEFT OUTER JOIN users ON users.username = userlog.name WHERE photos.id = ?', req.params.id, function(err, rows, fields) {
+        connection.query('SELECT DISTINCT photos.id, users.name FROM photos LEFT OUTER JOIN userlog ON userlog.login = photos.login_id LEFT OUTER JOIN users ON users.username = userlog.name WHERE photos.id = ?', [req.params.id], function(err, rows, fields) {
           if (rows[0].name != req.session.full_name) {
             callback("error", null);
           } else {
@@ -106,7 +106,7 @@ exports.deleteRecord = function(req, res) {
       },
 
       function(callback) {
-        connection.query('DELETE FROM photos WHERE id = ' + req.params.id, function(err, rows, fields) {
+        connection.query('DELETE FROM photos WHERE id = ?', [req.params.id], function(err, rows, fields) {
           if (err) {
             console.log("Error deleting from table photos - ", err);
           } else {
@@ -116,7 +116,7 @@ exports.deleteRecord = function(req, res) {
       },
 
       function(callback) {
-        connection.query('DELETE FROM photo_notes WHERE photo_id = ' + req.params.id, function(err, rows, fields) {
+        connection.query('DELETE FROM photo_notes WHERE photo_id = ?', [req.params.id], function(err, rows, fields) {
           if (err) {
             console.log("Error deleting from table photo_notes - ", err);
           } else {
@@ -126,7 +126,7 @@ exports.deleteRecord = function(req, res) {
       },
 
       function(callback) {
-        connection.query('DELETE FROM taxa WHERE photo_id = ' + req.params.id, function(err, rows, fields) {
+        connection.query('DELETE FROM taxa WHERE photo_id = ?', [req.params.id], function(err, rows, fields) {
           if (err) {
             console.log("Error deleting from table taxa - ", err);
           } else {
@@ -136,7 +136,7 @@ exports.deleteRecord = function(req, res) {
       },
 
       function(callback) {
-        connection.query('DELETE FROM photo_comments WHERE photo_id = ' + req.params.id, function(err, rows, fields) {
+        connection.query('DELETE FROM photo_comments WHERE photo_id = ?', [req.params.id], function(err, rows, fields) {
           if (err) {
             console.log("Error deleting from table photo_comments - ", err);
           } else {
