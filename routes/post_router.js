@@ -75,7 +75,7 @@ exports.editComment = function(req, res) {
 
     connection.query('UPDATE photo_comments SET comments = ?, post_time = ? WHERE id = ?', [req.body.comments, fullDate, req.body.commentID], function(err, rows, fields) {
       if (err) {
-        console.log(err);
+        console.log("editComment - ", err);
       }
       connection.release();
       res.redirect('back');
@@ -165,7 +165,7 @@ exports.upload = function(req, res) {
           location = req.body.city + ", " + req.body.county + ", " + req.body.state;
           connection.query('SELECT id FROM locals_mod2 WHERE city = ? AND county = ? AND state = ? LIMIT 1', [req.body.city, req.body.county, req.body.state], function(err, rows, fields) {
             if (err) {
-              console.log(err);
+              console.log("upload step 1 - ", err);
               callback(err);
             } else {
               // ! Add check to make sure this returned something ! //
@@ -177,7 +177,7 @@ exports.upload = function(req, res) {
           location = req.body.county + ", " + req.body.state;
           connection.query('SELECT id FROM locals_mod2 WHERE county = ? AND state = ? LIMIT 1', [req.body.county, req.body.state], function(err, rows, fields) {
             if (err) {
-              console.log(err);
+              console.log("upload step 1 - ", err);
               callback(err);
             } else {
               var localID = rows[0].id;
@@ -1417,8 +1417,8 @@ exports.searchPost = function(req, res) {
       connection.release();
 
       if (error) {
-        res.redirect("/");
         console.log("searchPost - ", error);
+        res.redirect("/");
       } else {
         if (typeof req.session.user_id === 'undefined') {
           var login_id = [];
