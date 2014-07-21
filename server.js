@@ -7,7 +7,8 @@ var express = require('express'),
   app = express();
 
 connection = mysql.createPool(config.credentials);
-connection.getConnection(function(error, connection) {
+connection.getConnection(function(error, conn) {
+  conn.release();
   if (error) {
     console.log("error - ", error);
   } else {
