@@ -6,15 +6,8 @@ var express = require('express'),
   config = require("./routes/config"),
   app = express();
 
-connection = mysql.createPool(config.credentials);
-connection.getConnection(function(error, conn) {
-  conn.release();
-  if (error) {
-    console.log("error - ", error);
-  } else {
-    console.log("Connected to MySQL");
-  }
-});
+//connection = mysql.createPool(config.credentials);
+conn = mysql.createConnection(config.credentials);
 
 // assign the Mustache engine to .html files
 app.engine('html', cons.mustache);
