@@ -62,7 +62,8 @@ $(document).ready(function() {
             $("#fromDeepBlue").append('<p><a href="http://deepblue.lib.umich.edu/simple-search?query=' + result[i].taxon + '">' + result[i].taxon + '</a></p>');
           }
 
-          pbData = [];
+          pbData = [],
+          error = [];
           for (var p=0;p<taxa.length;p++) {
             $.ajax({
               type:'GET',
@@ -70,7 +71,11 @@ $(document).ready(function() {
               dataType: 'json',
               crossDomain: true, 
               success: function(pbdata) {
-                pbData.push(pbdata.records[0]);
+                if (pbdata.records.length > 0) {
+                  pbData.push(pbdata.records[0]);
+                } else {
+                  error.push({"taxon": taxa[p]});
+                }
               },
               error: function(xhr, ajaxOptions, thrownError) {
                 //console.log(xhr.status);
@@ -88,9 +93,9 @@ $(document).ready(function() {
   });
 
   function fillTemplate(item) {
-    var result = {"pbData": pbData},
+    var result = {"pbData": pbData, "errors": error};
 
-    template = "{{#pbData}}<h4><a href='http://paleobiodb.org/cgi-bin/bridge.pl?action=checkTaxonInfo&taxon_name={{nam}}'>{{nam}}</a></h4><p>{{#att}}<strong>Named: </strong>{{att}}<br>{{/att}}{{^att}}{{/att}}{{#fea}}<strong>First appearance: </strong>{{fea}} ({{fla}})<br>{{/fea}}{{^fea}}{{/fea}}{{#lea}}<strong>Last appearance: </strong>{{lea}} ({{lla}})<br>{{/lea}}{{^lea}}{{/lea}}{{#sta}}<strong>Taxonomic status: </strong>{{sta}}<br>{{/sta}}{{^sta}}{{/sta}}{{#ext}}<strong>ext: </strong>{{ext}}<br><br>{{/ext}}{{^ext}}{{/ext}}{{#clt}}<strong>Class: </strong><a href='#' class='pbdb_link'>{{clt.nam}}</a><br>{{/clt}}{{^clt}}{{/clt}}{{#odt}}<strong>Order: </strong><a href='#' class='pbdb_link'>{{odt.nam}}</a><br>{{/odt}}{{^odt}}{{/odt}}{{#fmt}}<strong>Family: </strong><a href='#' class='pbdb_link'>{{fmt.nam}}</a><br>{{/fmt}}{{^fmt}}{{/fmt}}</p>{{/pbData}}{{^pbData}}<p>PaleoDB data unavailable</p>{{/pbData}}",
+    template = "{{#pbData}}<h4><a href='http://paleobiodb.org/cgi-bin/bridge.pl?action=checkTaxonInfo&taxon_name={{nam}}'>{{nam}}</a></h4><p>{{#att}}<strong>Named: </strong>{{att}}<br>{{/att}}{{^att}}{{/att}}{{#fea}}<strong>First appearance: </strong>{{fea}} ({{fla}})<br>{{/fea}}{{^fea}}{{/fea}}{{#lea}}<strong>Last appearance: </strong>{{lea}} ({{lla}})<br>{{/lea}}{{^lea}}{{/lea}}{{#sta}}<strong>Taxonomic status: </strong>{{sta}}<br>{{/sta}}{{^sta}}{{/sta}}{{#ext}}<strong>ext: </strong>{{ext}}<br><br>{{/ext}}{{^ext}}{{/ext}}{{#clt}}<strong>Class: </strong><a href='#' class='pbdb_link'>{{clt.nam}}</a><br>{{/clt}}{{^clt}}{{/clt}}{{#odt}}<strong>Order: </strong><a href='#' class='pbdb_link'>{{odt.nam}}</a><br>{{/odt}}{{^odt}}{{/odt}}{{#fmt}}<strong>Family: </strong><a href='#' class='pbdb_link'>{{fmt.nam}}</a><br>{{/fmt}}{{^fmt}}{{/fmt}}</p>{{/pbData}}{{#errors}}{{taxon}} not in PaleoDB{{/errors}}",
 
     templateHTML = Mustache.to_html(template, result);
 

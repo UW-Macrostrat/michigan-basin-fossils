@@ -261,7 +261,7 @@ $(document).ready(function() {
 
     $.ajax({
       type:'GET',
-      url:'/api/photos/county/' + currentCounty.feature.properties.FIPS + '?limit=0', 
+      url:'/api/photos/county/' + currentCounty.feature.properties.FIPS + '?home=true&limit=0', 
       success: function(data) {
         if (data.length > 0) {
           var result = {"pictures" : data},
@@ -359,7 +359,7 @@ function morePictures(e, direction) {
 
   $.ajax({
     type:'GET',
-    url:'/api/photos/county/' + currentCounty.feature.properties.FIPS + '?limit=' + limit, 
+    url:'/api/photos/county/' + currentCounty.feature.properties.FIPS + '?home=true&limit=' + limit, 
     success: function(data) {
       if (data.length > 0) {
         var result = {"pictures" : data},

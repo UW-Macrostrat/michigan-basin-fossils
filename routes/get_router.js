@@ -591,7 +591,7 @@ exports.findByCounty = function(req, res) {
     req.query.limit = 0;
   }
 
-  if (typeof req.session.query === 'undefined') {
+  if (typeof req.session.query === 'undefined' || req.query.home == "true") {
     conn.query("SELECT DISTINCT photos.id, photos.title, users.name, (SELECT GROUP_CONCAT(' ', taxon, ' ', species) from taxa WHERE taxa.photo_id = photos.id) as taxon FROM photos LEFT OUTER JOIN locals_mod2 ON locals_mod2.id = photos.local_id LEFT OUTER JOIN userlog ON userlog.login = photos.login_id LEFT OUTER JOIN users ON users.username = userlog.name LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id WHERE locals_mod2.county_fips = ? LIMIT " + req.query.limit + ", 20", [req.params.id], function(err, rows, fields) {
       if (err) {
         console.log("findByCounty - ", err);
