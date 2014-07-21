@@ -25,9 +25,11 @@ mysqlConn.getConnection(function(err, connection) {
               var clt = (data.records[0].clt) ? data.records[0].clt.nam : "",
                   odt = (data.records[0].odt) ? data.records[0].odt.nam : "",
                   fmt = (data.records[0].fmt) ? data.records[0].fmt.nam : "",
-                  pht = (data.records[0].pht) ? data.records[0].pht.nam : "";
+                  pht = (data.records[0].pht) ? data.records[0].pht.nam : "",
+                  genus = (data.records[0].rnk === 5) ? data.records[0].nam : "",
+                  oid = data.records[0].oid;
 
-              connection.query("UPDATE taxa SET pbdb_class = ?, pbdb_order = ?, pbdb_family = ?, pbdb_phylum = ? WHERE id = ?", [clt, odt, fmt, pht, record.id], function(e, d) {
+              connection.query("UPDATE taxa SET pbdb_taxon_no = ?, pbdb_class = ?, pbdb_order = ?, pbdb_family = ?, pbdb_phylum = ?, pbdb_genus = ? WHERE id = ?", [oid, clt, odt, fmt, pht, genus, record.id], function(e, d) {
                 if (e) {
                   callback(e);
                 } else {
