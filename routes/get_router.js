@@ -158,6 +158,46 @@ exports.user_contributions = function(req, res) {
   });
 }
 
+exports.timeSeries = function(req, res) {
+  if (req.query.stats === "true" || typeof req.session.query === "undefined") {
+    async.parallel([
+      function(callback) {
+        conn.query('SELECT id AS chron_id, stage, age_bottom, age_top, (age_bottom - age_top) AS total_time, count FROM (SELECT chron.stage, chron.id, chron.age_bottom, chron.age_top FROM chron WHERE rank = "epoch" AND age_bottom < 500 AND age_bottom > 300 ORDER BY age_bottom DESC) c LEFT OUTER JOIN (SELECT COUNT(DISTINCT pbdb_genus) AS count, containing_stage from taxa JOIN photos ON photo_id = photos.id GROUP BY containing_stage) p ON c.stage = p.containing_stage', function(error, data) {
+          callback(null, data);
+        });
+      },
+      function(callback) {
+        conn.query('SELECT stage, chron.id AS chron_id, (age_bottom - age_top) AS total_time, age_bottom, age_top FROM chron WHERE rank = "period" AND age_bottom < 541 AND age_bottom > 300 ORDER BY age_bottom DESC', function(error, data) {
+          callback(null, data);
+        });
+      }
+    ], function(err, result) {
+      res.jsonp({
+        "epochs": result[0],
+        "periods": result[1]
+      });
+    });
+  } else {
+    async.parallel([
+      function(callback) {
+        conn.query('SELECT id AS chron_id, stage, age_bottom, age_top, (age_bottom - age_top) AS total_time, count FROM (SELECT chron.stage, chron.id, chron.age_bottom, chron.age_top FROM chron WHERE rank = "epoch" AND age_bottom < 500 AND age_bottom > 300 ORDER BY age_bottom DESC) c LEFT OUTER JOIN (SELECT COUNT(DISTINCT pbdb_genus) AS count, containing_stage from taxa JOIN photos ON photo_id = photos.id WHERE ' + req.session.query + ' GROUP BY containing_stage) p ON c.stage = p.containing_stage', function(error, data) {
+          callback(null, data);
+        });
+      },
+      function(callback) {
+        conn.query('SELECT stage, chron.id AS chron_id, (age_bottom - age_top) AS total_time, age_bottom, age_top FROM chron WHERE rank = "period" AND age_bottom < 541 AND age_bottom > 300 ORDER BY age_bottom DESC', function(error, data) {
+          callback(null, data);
+        });
+      }
+    ], function(err, result) {
+      res.jsonp({
+        "epochs": result[0],
+        "periods": result[1]
+      });
+    });
+  } 
+}
+
 exports.faq = function(req, res) {
   conn.query('SELECT * FROM county_counts', function(error, data) {
     if (typeof req.session.user_id == 'undefined') {
@@ -1076,6 +1116,7 @@ exports.simpleSearch = function(req, res) {
 }; // End simpleSearch
 
 exports.searchRecent = function(req, res) {
+  req.session.query = undefined;
   async.waterfall([
     function(callback) {
       // Reset our session query

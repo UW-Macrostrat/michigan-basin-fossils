@@ -89,6 +89,7 @@ app.get('/api/photos/random/:id', getRoutes.randomPhotos); // Get any number of 
 app.get('/api/autocomplete', getRoutes.autocomplete); // Autocomplete search feeder
 app.get('/api/userstats', getRoutes.user_contributions); // User contribution summary
 app.get('/api/datestats', getRoutes.monthly_stats); // Database uploads by month
+app.get('/api/time', getRoutes.timeSeries); // Get data for time graph
 
 // Upload form helpers
 app.get('/upload', checkAuth, getRoutes.upload); // Upload form route ** Secured **

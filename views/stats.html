@@ -7,11 +7,10 @@
     <meta name="description" content=""/>
     <meta name="author" content="John J Czaplewski"/>
 
-    <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
     <link href="//netdna.bootstrapcdn.com/font-awesome/3.1.1/css/font-awesome.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/smoothness/jquery-ui-1.10.3.custom.css"/>
     <link href="/css/main.css" rel="stylesheet"/>
-    <!--<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.5/leaflet.css" />-->
     <link rel="stylesheet" href="/css/leaflet.css" />
     <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'/>
 
@@ -65,6 +64,19 @@
       margin: 0 auto;
       text-align: center;
     }
+
+    .barDiversity {
+      fill: #0B8AA8;
+    }
+
+    .periods {
+      fill: #000;
+    }
+
+    .diversityLine {
+      stroke-width:2px;
+      stroke: #777;
+    }
     </style>
 
     <script>
@@ -100,6 +112,11 @@
           <h3>Photos by county</h3>
         </div>
       </div>
+      <div class="row-fluid">
+        <div class="span12" id="diversity">
+          <h3>Diversity</h3>
+        </div>
+      </div>
     </div>
     <hr>
     
@@ -108,7 +125,7 @@
     <script src="http://d3js.org/d3.v3.min.js"></script>
     <script src="http://d3js.org/topojson.v1.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
-    <!--<script src="/js/jquery.v2.0.min.js"></script>-->
+
     <script src="/bootstrap/js/bootstrap.min.js"></script>
     <script src="/js/mustache.js"></script>
     <script src="/js/jquery-ui-1.10.3.custom.min.js"></script>
@@ -334,7 +351,165 @@
              d > 0    ? '#7CE79B' :
                          '#bbb';
     }
+    ///////////////////////////////////////
 
+    function graph4() {
+      var margin = {top: 20, right: 20, bottom: 100, left: 40},
+          width = 960 - margin.left - margin.right,
+          height = 500 - margin.top - margin.bottom;
+
+    //  var x = d3.scale.ordinal()
+    //      .rangeRoundBands([0, width], .1);
+      var x = d3.scale.linear()
+          .range([0, width]);
+
+      var y = d3.scale.linear()
+          .range([height, 0]);
+
+      var xAxis = d3.svg.axis()
+          .scale(x)
+          .orient("bottom");
+
+      var yAxis = d3.svg.axis()
+          .scale(y)
+          .orient("left")
+          .ticks(8, "");
+
+
+      var svg = d3.select("#diversity").append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+          .attr("id", "diversityGraph")
+        .append("g")
+          .attr("id", "diversityGraphGroup")
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      d3.json("/api/time?stats=true", function(error, data) {
+        var epochs = data.epochs,
+            periods = data.periods;
+
+        epochs.forEach(function(d) {
+          if (!d.count) {
+            d.count = 0;
+          }
+        });
+
+        var colors = {
+          "Ordovician": "#009270",
+          "Silurian": "#B3E1B6",
+          "Devonian": "#CB8C37",
+          "Mississippian": "#678F66",
+          "Pennsylvanian": "#99C2B5"
+        };
+
+        var epochColors = {
+          "Early Ordovician": "#1A9D6F",
+          "Middle Ordovician": "#4DB47E",
+          "Late Ordovician": "#7FCA93",
+          "Early Silurian": "#99D7B3",
+          "Middle Silurian": "#B3E1C2",
+          "Late Silurian": "#E6F5E1",
+          "Early Devonian": "#E5AC4D",
+          "Middle Devonian": "#F1C868",
+          "Late Devonian": "#F1E19D",
+          "Early Mississippian": "#8CB06C",
+          "Middle Mississippian": "#A6B96C",
+          "Late Mississippian": "#BFC26B",
+          "Early Pennsylvanian": "#99C2B6",
+          "Middle Pennsylvanian": "#B3CBB9",
+          "Late Pennsylvanian": "#CCD4C7"
+        };
+
+        var periodX = d3.scale.linear()
+            .domain([0, d3.sum(periods, function(d) { return d.total_time; })])
+            .range([0, width]);
+
+        var periodPos = d3.scale.linear()
+            .domain([d3.max(periods, function(d) { return d.age_bottom }), d3.min(periods, function(d) { return d.age_top })])
+            .range([0, width])
+
+        var scale = d3.select("#diversityGraph").select("g")
+          .append("g")
+          .attr("id", "timeScale")
+          .attr("transform", "translate(0," + (382) + ")");
+
+        scale.selectAll(".periods")
+          .data(periods)
+        .enter().append("rect")
+          .attr("height", "20")
+          .attr("width", function(d) { return periodX(d.total_time); })
+          .attr("x", function(d) { return periodPos(d.age_bottom) })
+          .attr("y", "20")
+          .style("fill", function(d) { return colors[d.stage] })
+          .append("svg:title")
+            .text(function(d) { return d.stage });
+          
+
+        scale.selectAll(".periodNames")
+          .data(periods)
+        .enter().append("text")
+          .attr("x", function(d) { return (periodPos(d.age_bottom) + periodPos(d.age_top))/2 - 25})
+          .attr("y", "35")
+          .text(function(d) { return d.stage });
+
+        scale.selectAll(".epochs")
+          .data(epochs)
+        .enter().append("rect")
+          .attr("height", "20")
+          .attr("width", function(d) { return periodX(d.total_time); })
+          .attr("x", function(d) { return periodPos(d.age_bottom) })
+          .style("fill", function(d) { return epochColors[d.stage] })
+          .append("svg:title")
+            .text(function(d) { return d.stage });
+
+        x.domain([d3.max(epochs, function(d) { return d.age_bottom; }), d3.min(epochs, function(d) { return d.age_bottom; }) - 15])
+        y.domain([0, d3.max(epochs, function(d) { return d.count; })]);
+
+        svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")")
+            //.call(xAxis);
+
+        svg.append("g")
+            .attr("class", "y axis")
+            .call(yAxis)
+          .append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 6)
+            .attr("dy", ".71em")
+            .style("text-anchor", "end")
+            .text("Unique genera");
+
+        var line = d3.svg.line()
+          .interpolate("linear") 
+          .x(function(d) { return (periodPos(d.age_bottom) + periodPos(d.age_top))/2 })
+          .y(function(d) { return y(d.count); });
+          
+        svg.append("path")
+          .datum(epochs)
+          .attr("class", "line diversityLine")
+          .attr("d", line)
+          .attr("stroke-dasharray", "10, 7");
+
+      });
+
+      function type(d) {
+        d.count = +d.count;
+        return d;
+      }
+
+      d3.select(window)
+        .on("resize", function() {
+          var scale = ((parseInt(d3.select("#diversity").style("width")) - 40)/900 < 1) ? (parseInt(d3.select("#diversity").style("width")) - 40)/900 : 1
+          d3.select("#diversityGraphGroup")
+            .attr("transform", "scale(" + scale + ")translate(40,20)");
+
+          d3.select("#diversityGraph")
+            .attr("height", parseInt(d3.select("#diversity").style("width"))*0.618);
+        })
+    }
+
+    graph4();
     </script>
 </body>
 </html>

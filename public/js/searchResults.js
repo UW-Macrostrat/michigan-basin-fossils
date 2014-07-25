@@ -163,12 +163,12 @@ function init() {
     maxZoom:10,
     minZoom: 5,
     zoomControl: false
-  }),
+  });
 
-    osm = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: 'Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'}).addTo(map),
+  var osm = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: 'Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'}).addTo(map),
     zoom = new L.Control.Zoom({position: 'bottomright'}).addTo(map),
     legend = L.control({position: 'bottomleft'});
-    
+ /*   
   legend.onAdd = function(map) {
       var div = L.DomUtil.create('div', 'info legend'),
         colors = ['#377C5A','#47966A','#57B07B','#69CB8B','#7CE79B','#bbb'],
@@ -182,7 +182,7 @@ function init() {
       return div;
   };
 
-  legend.addTo(map);
+  legend.addTo(map);*/
 
   var infoWindow = L.control({position: 'bottomleft'});
 
@@ -351,6 +351,8 @@ function init() {
     });
   }
 
+diversityGraph();
+
 function morePictures(e, direction) {
   if (direction == 1) {
     $('#leftArrow').show();
@@ -483,3 +485,157 @@ var rankMap = { 25: "unranked", 23: "kingdom", 22: "subkingdom",
       10: "superfamily", 9: "family", 8: "subfamily",
       7: "tribe", 6: "subtribe", 5: "genus", 4: "subgenus",
       3: "species", 2: "subspecies" };
+
+
+function diversityGraph() {
+  var margin = {top: 20, right: 20, bottom: 120, left: 40},
+      width = 960 - margin.left - margin.right,
+      height = 1400 - margin.top - margin.bottom;
+
+  var x = d3.scale.linear()
+      .range([0, width]);
+
+  var y = d3.scale.linear()
+      .range([height, 0]);
+
+  var xAxis = d3.svg.axis()
+      .scale(x)
+      .orient("bottom");
+
+  var yAxis = d3.svg.axis()
+      .scale(y)
+      .orient("left")
+      .ticks(8, "")
+      .tickPadding(3)
+
+  var svg = d3.select("#diversity").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .attr("id", "diversityGraph")
+    .append("g")
+      .attr("id", "diversityGraphGroup")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  d3.json("/api/time", function(error, data) {
+    var epochs = data.epochs,
+        periods = data.periods;
+
+    epochs.forEach(function(d) {
+      if (!d.count) {
+        d.count = 0;
+      }
+    });
+
+    var colors = {
+      "Ordovician": "#009270",
+      "Silurian": "#B3E1B6",
+      "Devonian": "#CB8C37",
+      "Mississippian": "#678F66",
+      "Pennsylvanian": "#99C2B5",
+      "Early Ordovician": "#1A9D6F",
+      "Middle Ordovician": "#4DB47E",
+      "Late Ordovician": "#7FCA93",
+      "Early Silurian": "#99D7B3",
+      "Middle Silurian": "#B3E1C2",
+      "Late Silurian": "#E6F5E1",
+      "Early Devonian": "#E5AC4D",
+      "Middle Devonian": "#F1C868",
+      "Late Devonian": "#F1E19D",
+      "Early Mississippian": "#8CB06C",
+      "Middle Mississippian": "#A6B96C",
+      "Late Mississippian": "#BFC26B",
+      "Early Pennsylvanian": "#99C2B6",
+      "Middle Pennsylvanian": "#B3CBB9",
+      "Late Pennsylvanian": "#CCD4C7"
+    };
+
+    var periodX = d3.scale.linear()
+        .domain([0, d3.sum(periods, function(d) { return d.total_time; })])
+        .range([0, width]);
+
+    var periodPos = d3.scale.linear()
+        .domain([d3.max(periods, function(d) { return d.age_bottom }), d3.min(periods, function(d) { return d.age_top })])
+        .range([0, width])
+
+    var scale = d3.select("#diversityGraph").select("g")
+      .append("g")
+      .attr("id", "timeScale")
+      .attr("transform", "translate(15," + (height+3) + ")");
+
+    scale.selectAll(".periods")
+      .data(periods)
+    .enter().append("rect")
+      .attr("height", "20")
+      .attr("width", function(d) { return periodX(d.total_time); })
+      .attr("x", function(d) { return periodPos(d.age_bottom) })
+      .attr("y", "40")
+      .style("fill", function(d) { return colors[d.stage] })
+      .append("svg:title")
+        .text(function(d) { return d.stage });
+      
+    scale.selectAll(".periodNames")
+      .data(periods)
+    .enter().append("text")
+      .attr("x", function(d) { return (periodPos(d.age_bottom) + periodPos(d.age_top))/2 - 35})
+      .attr("y", "55")
+      .text(function(d) { return d.stage });
+
+    scale.selectAll(".epochs")
+      .data(epochs)
+    .enter().append("rect")
+      .attr("height", "40")
+      .attr("width", function(d) { return periodX(d.total_time); })
+      .attr("x", function(d) { return periodPos(d.age_bottom) })
+      .style("fill", function(d) { return colors[d.stage] })
+      .append("svg:title")
+        .text(function(d) { return d.stage });
+
+    x.domain([d3.max(epochs, function(d) { return d.age_bottom; }), d3.min(epochs, function(d) { return d.age_bottom; }) - 15])
+    y.domain([0, d3.max(epochs, function(d) { return d.count; })]);
+
+    svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(15," + height + ")");
+
+    svg.append("g")
+        .attr("class", "y axis")
+        .attr("transform", "translate(15,0)")
+        .call(yAxis)
+      .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Unique genera");
+
+    var line = d3.svg.line()
+      .interpolate("linear") 
+      .x(function(d) { return (periodPos(d.age_bottom) + periodPos(d.age_top))/2 })
+      .y(function(d) { return y(d.count); });
+      
+    svg.append("path")
+      .datum(epochs)
+      .attr("class", "line diversityLine")
+      .attr("d", line)
+      .attr("stroke-dasharray", "10, 7");
+
+    resize();
+  });
+
+  function type(d) {
+    d.count = +d.count;
+    return d;
+  }
+
+  function resize() {
+    var scale = ((parseInt(d3.select("#diversity").style("width")) - 40)/900 < 1) ? (parseInt(d3.select("#diversity").style("width")) - 40)/900 : 1
+    d3.select("#diversityGraphGroup")
+      .attr("transform", "scale(" + scale + ")translate(40,20)");
+
+    d3.select("#diversityGraph")
+      .attr("height", parseInt(d3.select("#diversity").style("width"))*(height/width))
+      .attr("width", parseInt(d3.select("#diversity").style("width")));
+  }
+  d3.select(window)
+    .on("resize", resize);
+}
