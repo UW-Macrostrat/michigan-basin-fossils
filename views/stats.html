@@ -358,8 +358,6 @@
           width = 960 - margin.left - margin.right,
           height = 500 - margin.top - margin.bottom;
 
-    //  var x = d3.scale.ordinal()
-    //      .rangeRoundBands([0, width], .1);
       var x = d3.scale.linear()
           .range([0, width]);
 
@@ -374,7 +372,6 @@
           .scale(y)
           .orient("left")
           .ticks(8, "");
-
 
       var svg = d3.select("#diversity").append("svg")
           .attr("width", width + margin.left + margin.right)
@@ -399,10 +396,7 @@
           "Silurian": "#B3E1B6",
           "Devonian": "#CB8C37",
           "Mississippian": "#678F66",
-          "Pennsylvanian": "#99C2B5"
-        };
-
-        var epochColors = {
+          "Pennsylvanian": "#99C2B5",
           "Early Ordovician": "#1A9D6F",
           "Middle Ordovician": "#4DB47E",
           "Late Ordovician": "#7FCA93",
@@ -444,7 +438,6 @@
           .append("svg:title")
             .text(function(d) { return d.stage });
           
-
         scale.selectAll(".periodNames")
           .data(periods)
         .enter().append("text")
@@ -458,7 +451,7 @@
           .attr("height", "20")
           .attr("width", function(d) { return periodX(d.total_time); })
           .attr("x", function(d) { return periodPos(d.age_bottom) })
-          .style("fill", function(d) { return epochColors[d.stage] })
+          .style("fill", function(d) { return colors[d.stage] })
           .append("svg:title")
             .text(function(d) { return d.stage });
 
@@ -466,9 +459,8 @@
         y.domain([0, d3.max(epochs, function(d) { return d.count; })]);
 
         svg.append("g")
-            .attr("class", "x axis")
-            .attr("transform", "translate(0," + height + ")")
-            //.call(xAxis);
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + height + ")");
 
         svg.append("g")
             .attr("class", "y axis")
@@ -506,7 +498,7 @@
 
           d3.select("#diversityGraph")
             .attr("height", parseInt(d3.select("#diversity").style("width"))*0.618);
-        })
+        });
     }
 
     graph4();

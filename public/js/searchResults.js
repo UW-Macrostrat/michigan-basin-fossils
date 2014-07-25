@@ -2,10 +2,10 @@ function init() {
   // Attach listeners for the interface
 
   $('a.accordion-toggle').on('click', function() {
-    if($(this).children(i).hasClass('icon-plus')) {
-      $(this).children(i).removeClass('icon-plus').addClass('icon-minus');
+    if($(this).children("i").hasClass('icon-plus')) {
+      $(this).children("i").removeClass('icon-plus').addClass('icon-minus');
     } else {
-      $(this).children(i).removeClass('icon-minus').addClass('icon-plus')
+      $(this).children("i").removeClass('icon-minus').addClass('icon-plus')
     }
   });
   $('.thumb').on('click', function() {
@@ -81,15 +81,16 @@ function init() {
 
 
   function fillTemplate(item) {
-    var result = {"pbData": pbData};
+    var result = {"pbData": pbData, "errors": error};
 
-    template = "{{#pbData}}<h4><a href='http://paleobiodb.org/cgi-bin/bridge.pl?action=checkTaxonInfo&taxon_name={{nam}}'>{{nam}}</a></h4><p>{{#att}}<strong>Named: </strong>{{att}}<br>{{/att}}{{^att}}{{/att}}{{#fea}}<strong>First appearance: </strong>{{fea}} ({{fla}})<br>{{/fea}}{{^fea}}{{/fea}}{{#lea}}<strong>Last appearance: </strong>{{lea}} ({{lla}})<br>{{/lea}}{{^lea}}{{/lea}}{{#sta}}<strong>Taxonomic status: </strong>{{sta}}<br>{{/sta}}{{^sta}}{{/sta}}{{#ext}}<strong>ext: </strong>{{ext}}<br><br>{{/ext}}{{^ext}}{{/ext}}{{#clt}}<strong>Class: </strong><a href='#' class='pbdb_link'>{{clt.nam}}</a><br>{{/clt}}{{^clt}}{{/clt}}{{#odt}}<strong>Order: </strong><a href='#' class='pbdb_link'>{{odt.nam}}</a><br>{{/odt}}{{^odt}}{{/odt}}{{#fmt}}<strong>Family: </strong><a href='#' class='pbdb_link'>{{fmt.nam}}</a><br>{{/fmt}}{{^fmt}}{{/fmt}}</p>{{/pbData}}{{^pbData}}<p>PaleoDB data unavailable</p>{{/pbData}}";
+    var template = "{{#pbData}}<h4><a href='http://paleobiodb.org/cgi-bin/bridge.pl?action=checkTaxonInfo&taxon_name={{nam}}'>{{nam}}</a></h4><p>{{#att}}<strong>Named: </strong>{{att}}<br>{{/att}}{{^att}}{{/att}}{{#fea}}<strong>First appearance: </strong>{{fea}} ({{fla}})<br>{{/fea}}{{^fea}}{{/fea}}{{#lea}}<strong>Last appearance: </strong>{{lea}} ({{lla}})<br>{{/lea}}{{^lea}}{{/lea}}{{#sta}}<strong>Taxonomic status: </strong>{{sta}}<br>{{/sta}}{{^sta}}{{/sta}}{{#ext}}<strong>ext: </strong>{{ext}}<br><br>{{/ext}}{{^ext}}{{/ext}}{{#clt}}<strong>Class: </strong><a href='#' class='pbdb_link'>{{clt.nam}}</a><br>{{/clt}}{{^clt}}{{/clt}}{{#odt}}<strong>Order: </strong><a href='#' class='pbdb_link'>{{odt.nam}}</a><br>{{/odt}}{{^odt}}{{/odt}}{{#fmt}}<strong>Family: </strong><a href='#' class='pbdb_link'>{{fmt.nam}}</a><br>{{/fmt}}{{^fmt}}{{/fmt}}</p>{{/pbData}}{{#errors}}{{taxon}} not in PaleoDB<br>{{/errors}}";
 
-    templateHTML = Mustache.to_html(template, result);
+    var templateHTML = Mustache.to_html(template, result);
 
-    $(item).html(templateHTML);
+    $("#pbdbInfo" + item).html(templateHTML);
     bindLink();
-}
+  }
+
   
   $('.deepblueInfo').on('click', function() {
     var currentID = $(this).attr("href"),
@@ -114,37 +115,56 @@ function init() {
   });
 
   $('.pbdbInfo').on('click', function() {
-    var currentID = $(this).attr("href"),
-      currentID_strip = currentID.replace('#pbdbInfo', '');
+    var currentID = $(this).attr("href");
+    currentID = currentID.replace('#pbdbInfo', '');
 
     if ($(currentID).text().length < 26) {
+
       $.ajax({
         type:'GET',
-        url:'/api/photoTaxa/?photo_id=' + currentID_strip, 
+        url:'/api/photoTaxa/?photo_id=' + currentID, 
         success: function(data) {
           if (data.length > 0) {
             var result = data;
             var taxa = [];
             for (var i=0;i<result.length;i++) {
-              taxa.push(result[i].taxon);
+              taxa.push(result[i]);
+              $("#fromDeepBlue").append('<p><a href="http://deepblue.lib.umich.edu/simple-search?query=' + result[i].taxon + '">' + result[i].taxon + '</a></p>');
             }
 
-            pbData = [];
-
+            pbData = [],
+            error = [];
             for (var p=0;p<taxa.length;p++) {
               $.ajax({
                 type:'GET',
-                url:'http://paleobiodb.org/data1.1/taxa/single.json?name=' + taxa[p] + '&show=attr,nav',
+                url:'http://paleobiodb.org/data1.1/taxa/single.json?name=' + taxa[p].taxon + " " + taxa[p].species + '&show=attr,nav',
                 dataType: 'json',
+                async: false,
                 crossDomain: true, 
                 success: function(pbdata) {
-                  pbData.push(pbdata.records[0]);
+                  if (pbdata.records.length > 0) {
+                    pbData.push(pbdata.records[0]);
+                  } else {
+                    $.ajax({
+                      type: 'GET',
+                      url:'http://paleobiodb.org/data1.1/taxa/single.json?name=' + taxa[p].taxon + '&show=attr,nav',
+                      dataType: 'json',
+                      async: false,
+                      crossDomain: true, 
+                      success: function(pbdata2) {
+                        if (pbdata2.records.length > 0) {
+                          pbData.push(pbdata2.records[0]);
+                        } else {
+                          error.push({"taxon": taxa[p].taxon});
+                        }
+                      }
+                    });
+                  }
                 },
                 error: function(xhr, ajaxOptions, thrownError) {
                   //console.log(xhr.status);
                   //console.log(thrownError);
-                },
-                async: false
+                }
               });
             }
             fillTemplate(currentID);
@@ -153,6 +173,7 @@ function init() {
         dataType: 'jsonp', 
         async: false 
       });
+      
     }
   });
 
@@ -196,8 +217,8 @@ function init() {
   $('.info.legend.id').hide();
 
   // Load the county boundaries as a topojson, then grab the data from the DB
-  $.getJSON('/js/features_on.json', function (data) {
-    var input_geojson = topojson.object(data, data.objects.features);
+  $.getJSON('/js/for_stats.json', function (data) {
+    var input_geojson = topojson.object(data, data.objects.for_stats);
 
     var photos = getMapData(),
         counties = {"type": "FeatureCollection", features: []};
@@ -490,7 +511,7 @@ var rankMap = { 25: "unranked", 23: "kingdom", 22: "subkingdom",
 function diversityGraph() {
   var margin = {top: 20, right: 20, bottom: 120, left: 40},
       width = 960 - margin.left - margin.right,
-      height = 1400 - margin.top - margin.bottom;
+      height = 800 - margin.top - margin.bottom;
 
   var x = d3.scale.linear()
       .range([0, width]);
@@ -504,8 +525,7 @@ function diversityGraph() {
 
   var yAxis = d3.svg.axis()
       .scale(y)
-      .orient("left")
-      .ticks(8, "")
+      .orient("right")
       .tickPadding(3)
 
   var svg = d3.select("#diversity").append("svg")
@@ -560,7 +580,7 @@ function diversityGraph() {
     var scale = d3.select("#diversityGraph").select("g")
       .append("g")
       .attr("id", "timeScale")
-      .attr("transform", "translate(15," + (height+3) + ")");
+      .attr("transform", "translate(-12," + (height+3) + ")");
 
     scale.selectAll(".periods")
       .data(periods)
@@ -599,11 +619,12 @@ function diversityGraph() {
 
     svg.append("g")
         .attr("class", "y axis")
-        .attr("transform", "translate(15,0)")
+        .attr("transform", "translate(" + (width - 15) + ",0)")
         .call(yAxis)
       .append("text")
-        .attr("transform", "rotate(-90)")
-        .attr("y", 6)
+        .attr("transform", "rotate(90)")
+        .attr("y", 12)
+        .attr("x", 320)
         .attr("dy", ".71em")
         .style("text-anchor", "end")
         .text("Unique genera");
@@ -628,7 +649,7 @@ function diversityGraph() {
   }
 
   function resize() {
-    var scale = ((parseInt(d3.select("#diversity").style("width")) - 40)/900 < 1) ? (parseInt(d3.select("#diversity").style("width")) - 40)/900 : 1
+    var scale = ((parseInt(d3.select("#diversity").style("width")) - 40)/920 < 1) ? (parseInt(d3.select("#diversity").style("width")) - 40)/920 : 1
     d3.select("#diversityGraphGroup")
       .attr("transform", "scale(" + scale + ")translate(40,20)");
 

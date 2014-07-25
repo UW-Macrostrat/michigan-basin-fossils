@@ -654,7 +654,7 @@ exports.findByCounty = function(req, res) {
 };
 
 exports.photoTaxa = function(req, res) {
-  conn.query('SELECT taxon from taxa where photo_id = ?', [req.query.photo_id], function(error, data) {
+  conn.query('SELECT taxon, species from taxa where photo_id = ?', [req.query.photo_id], function(error, data) {
     res.jsonp(data);
   });
 }

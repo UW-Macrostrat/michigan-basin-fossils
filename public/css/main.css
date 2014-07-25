@@ -237,6 +237,9 @@ select, input[type="file"] {
 .lead {
   margin-bottom: 0;
 }
+.tab-pane.active {
+  text-align: left;
+}
 
 #diversityGraph {
   padding-top: 20px;

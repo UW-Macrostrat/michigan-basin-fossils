@@ -175,8 +175,8 @@ $(document).ready(function() {
   $('.info.legend.id').hide();
 
   // Load the county boundaries as a topojson, then grab the data from the DB
-  $.getJSON('/js/features_on.json', function (data) {
-    var input_geojson = topojson.object(data, data.objects.features);
+  $.getJSON('/js/for_stats.json', function (data) {
+    var input_geojson = topojson.object(data, data.objects.for_stats);
 
     var photos = getMapData(),
         counties = {"type": "FeatureCollection", features: []};
