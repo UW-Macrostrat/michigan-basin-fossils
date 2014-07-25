@@ -38,7 +38,7 @@
         <div class="span4">
           <h2 id="{{id}}">{{title}}{{#type_specimen}}*{{/type_specimen}}</h2>{{#belongs_to}}<small class="editRecord" id="edit{{id}}">Edit record</small>{{/belongs_to}}{{^belongs_to}}{{/belongs_to}}
           <p>
-            <strong>Submitted by: </strong>{{name}}
+            <strong>Submitted by: </strong><a href="/search?contrib={{name}}">{{name}}</a>
             <br>
             <strong>Taxon: </strong><i>{{taxa}}</i>
             <br>

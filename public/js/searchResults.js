@@ -585,10 +585,10 @@ function diversityGraph() {
     scale.selectAll(".periods")
       .data(periods)
     .enter().append("rect")
-      .attr("height", "20")
+      .attr("height", "40")
       .attr("width", function(d) { return periodX(d.total_time); })
       .attr("x", function(d) { return periodPos(d.age_bottom) })
-      .attr("y", "40")
+      .attr("y", "20")
       .style("fill", function(d) { return colors[d.stage] })
       .append("svg:title")
         .text(function(d) { return d.stage });
@@ -596,14 +596,14 @@ function diversityGraph() {
     scale.selectAll(".periodNames")
       .data(periods)
     .enter().append("text")
-      .attr("x", function(d) { return (periodPos(d.age_bottom) + periodPos(d.age_top))/2 - 35})
-      .attr("y", "55")
-      .text(function(d) { return d.stage });
+      .attr("x", function(d) { return (periodPos(d.age_bottom) + periodPos(d.age_top))/2 })
+      .attr("y", "50")
+      .text(function(d) { return d.stage.charAt(0); });
 
     scale.selectAll(".epochs")
       .data(epochs)
     .enter().append("rect")
-      .attr("height", "40")
+      .attr("height", "20")
       .attr("width", function(d) { return periodX(d.total_time); })
       .attr("x", function(d) { return periodPos(d.age_bottom) })
       .style("fill", function(d) { return colors[d.stage] })
