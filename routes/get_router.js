@@ -33,12 +33,12 @@ exports.root = function(req, res) {
         });
       },
       three: function(callback) {
-        conn.query('SELECT * FROM summary', function(err, rows, fields) {
+        conn.query("select (select count(distinct taxa.photo_id) from (taxa join jjs_higher_taxa) where ((taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 279))) AS arthropodCount,(select count(distinct taxa.photo_id) from (taxa join jjs_higher_taxa) where ((taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 413))) AS echinodermCount,(select count(distinct taxa.photo_id) from (taxa join jjs_higher_taxa) where ((taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 384))) AS brachiopodCount,(select count(distinct taxa.photo_id) from (taxa join jjs_higher_taxa) where ((taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 64))) AS coralCount,(select distinct taxa.photo_id from ((photos join taxa) join jjs_higher_taxa) where ((taxa.photo_id = photos.id) and (photos.cover_pic = 1) and (taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 279)) order by rand() limit 1) AS uniqueArthropod,(select distinct taxa.photo_id from ((photos join taxa) join jjs_higher_taxa) where ((taxa.photo_id = photos.id) and (photos.cover_pic = 1) and (taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 413)) order by rand() limit 1) AS unqiueEchinoderm,(select distinct taxa.photo_id from ((photos join taxa) join jjs_higher_taxa) where ((taxa.photo_id = photos.id) and (photos.cover_pic = 1) and (taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 384)) order by rand() limit 1) AS uniqueBrachiopod,(select distinct taxa.photo_id from ((photos join taxa) join jjs_higher_taxa) where ((taxa.photo_id = photos.id) and (photos.cover_pic = 1) and (taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 64)) order by rand() limit 1) AS uniqueCoral,(select count(distinct taxa.taxon,taxa.species) AS taxa from taxa) AS taxaCount,(select count(distinct users.name) AS users from users) AS users,(select count(distinct photos.id) AS photos from photos) AS photos,(select date_format(photos.date,'%M %d, %Y') from photos order by photos.date desc limit 1) AS mostRecent", function(err, rows, fields) {
           callback(null, rows);
         });
       },
       four: function(callback) {
-        conn.query('SELECT * FROM county_counts', function(err, rows, fields) {
+        conn.query("select count(photos.local_id) AS photos,count(distinct taxa.taxon) AS genera,count(distinct photos.type_specimen) AS type_specimen,locals_mod2.county_fips AS fips,group_concat(distinct ' ',strat.unit separator ',') AS strat from (((photos join locals_mod2 on((locals_mod2.id = photos.local_id))) join taxa on((taxa.photo_id = photos.id))) join strat on((strat.id = photos.strat_id))) group by locals_mod2.county_fips", function(err, rows, fields) {
           callback(null, rows)
         });
       }
@@ -140,20 +140,20 @@ exports.randomPhotos = function(req, res) {
 }
 
 exports.stats = function(req, res) {
-  conn.query('SELECT * FROM summary', function(error, data) {
+  conn.query("select (select count(distinct taxa.photo_id) from (taxa join jjs_higher_taxa) where ((taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 279))) AS arthropodCount,(select count(distinct taxa.photo_id) from (taxa join jjs_higher_taxa) where ((taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 413))) AS echinodermCount,(select count(distinct taxa.photo_id) from (taxa join jjs_higher_taxa) where ((taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 384))) AS brachiopodCount,(select count(distinct taxa.photo_id) from (taxa join jjs_higher_taxa) where ((taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 64))) AS coralCount,(select distinct taxa.photo_id from ((photos join taxa) join jjs_higher_taxa) where ((taxa.photo_id = photos.id) and (photos.cover_pic = 1) and (taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 279)) order by rand() limit 1) AS uniqueArthropod,(select distinct taxa.photo_id from ((photos join taxa) join jjs_higher_taxa) where ((taxa.photo_id = photos.id) and (photos.cover_pic = 1) and (taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 413)) order by rand() limit 1) AS unqiueEchinoderm,(select distinct taxa.photo_id from ((photos join taxa) join jjs_higher_taxa) where ((taxa.photo_id = photos.id) and (photos.cover_pic = 1) and (taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 384)) order by rand() limit 1) AS uniqueBrachiopod,(select distinct taxa.photo_id from ((photos join taxa) join jjs_higher_taxa) where ((taxa.photo_id = photos.id) and (photos.cover_pic = 1) and (taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 64)) order by rand() limit 1) AS uniqueCoral,(select count(distinct taxa.taxon,taxa.species) AS taxa from taxa) AS taxaCount,(select count(distinct users.name) AS users from users) AS users,(select count(distinct photos.id) AS photos from photos) AS photos,(select date_format(photos.date,'%M %d, %Y') from photos order by photos.date desc limit 1) AS mostRecent", function(error, data) {
     res.jsonp(data);
   });
 
 }
 
 exports.monthly_stats = function(req, res) {
-  conn.query('Select * FROM monthly_stats', function(error, data) {
+  conn.query('select monthname(photos.date) AS month,year(photos.date) AS year,count(0) AS sum from photos group by year(photos.date),month(photos.date)', function(error, data) {
     res.jsonp(data);
   });
 }
 
 exports.user_contributions = function(req, res) {
-  conn.query('Select * FROM user_contributions', function(error, data) {
+  conn.query('select count(distinct photos.id) AS count,users.name AS name from ((((((photos left join locals_mod2 on((locals_mod2.id = photos.local_id))) left join strat on((strat.id = photos.strat_id))) left join userlog on((userlog.login = photos.login_id))) left join users on((users.username = userlog.name))) left join photo_notes on((photo_notes.photo_id = photos.id))) left join taxa on((taxa.photo_id = photos.id))) group by users.name', function(error, data) {
     res.jsonp(data);
   });
 }
@@ -199,78 +199,66 @@ exports.timeSeries = function(req, res) {
 }
 
 exports.faq = function(req, res) {
-  conn.query('SELECT * FROM county_counts', function(error, data) {
-    if (typeof req.session.user_id == 'undefined') {
-      var login_id = [];
-    } else {
-      var login_id = [{"username": req.session.user_id, "full_name": req.session.full_name}];
+  if (typeof req.session.user_id == 'undefined') {
+    var login_id = [];
+  } else {
+    var login_id = [{"username": req.session.user_id, "full_name": req.session.full_name}];
+  }
+  res.render('faq', {
+    login: login_id,
+    partials: {
+      "head": "head",
+      "navbar": "navbar",
+      "footer": "footer"
     }
-    res.render('faq', {
-      login: login_id,
-      mapdata: JSON.stringify(data),
-      partials: {
-        "head": "head",
-        "navbar": "navbar",
-        "footer": "footer"
-      }
-    });
   });
 }
 
 exports.about = function(req, res) {
-  conn.query('SELECT * FROM county_counts', function(error, data) {
-    if (typeof req.session.user_id == 'undefined') {
-      var login_id = [];
-    } else {
-      var login_id = [{"username": req.session.user_id, "full_name": req.session.full_name}];
+  if (typeof req.session.user_id == 'undefined') {
+    var login_id = [];
+  } else {
+    var login_id = [{"username": req.session.user_id, "full_name": req.session.full_name}];
+  }
+  res.render('about', {
+    login: login_id,
+    partials: {
+      "head": "head",
+      "navbar": "navbar",
+      "footer": "footer"
     }
-    res.render('about', {
-      login: login_id,
-      mapdata: JSON.stringify(data),
-      partials: {
-        "head": "head",
-        "navbar": "navbar",
-        "footer": "footer"
-      }
-    });
   });
 }
 
 exports.aboutus = function(req, res) {
-  conn.query('SELECT * FROM county_counts', function(error, data) {
-    if (typeof req.session.user_id == 'undefined') {
-      var login_id = [];
-    } else {
-      var login_id = [{"username": req.session.user_id, "full_name": req.session.full_name}];
+  if (typeof req.session.user_id == 'undefined') {
+    var login_id = [];
+  } else {
+    var login_id = [{"username": req.session.user_id, "full_name": req.session.full_name}];
+  }
+  res.render('aboutus', {
+    login: login_id,
+    partials: {
+      "head": "head",
+      "navbar": "navbar",
+      "footer": "footer"
     }
-    res.render('aboutus', {
-      login: login_id,
-      mapdata: JSON.stringify(data),
-      partials: {
-        "head": "head",
-        "navbar": "navbar",
-        "footer": "footer"
-      }
-    });
   });
 }
 
 exports.legal = function(req, res) {
-  conn.query('SELECT * FROM county_counts', function(error, data) {
-    if (typeof req.session.user_id == 'undefined') {
-      var login_id = [];
-    } else {
-      var login_id = [{"username": req.session.user_id, "full_name": req.session.full_name}];
+  if (typeof req.session.user_id == 'undefined') {
+    var login_id = [];
+  } else {
+    var login_id = [{"username": req.session.user_id, "full_name": req.session.full_name}];
+  }
+  res.render('legal', {
+    login: login_id,
+    partials: {
+      "head": "head",
+      "navbar": "navbar",
+      "footer": "footer"
     }
-    res.render('legal', {
-      login: login_id,
-      mapdata: JSON.stringify(data),
-      partials: {
-        "head": "head",
-        "navbar": "navbar",
-        "footer": "footer"
-      }
-    });
   });
 }
 
@@ -322,7 +310,7 @@ exports.advancedSearch = function(req, res) {
         });
       },
       mapdata: function(callback) {
-        conn.query('SELECT * FROM county_counts', function(err, rows, fields) {
+        conn.query("select count(photos.local_id) AS photos,count(distinct taxa.taxon) AS genera,count(distinct photos.type_specimen) AS type_specimen,locals_mod2.county_fips AS fips,group_concat(distinct ' ',strat.unit separator ',') AS strat from (((photos join locals_mod2 on((locals_mod2.id = photos.local_id))) join taxa on((taxa.photo_id = photos.id))) join strat on((strat.id = photos.strat_id))) group by locals_mod2.county_fips", function(err, rows, fields) {
           callback(null, rows);
         });
       }
@@ -534,13 +522,13 @@ exports.editRecord = function(req, res) {
 
 // Used to populate the map on the home page
 exports.mapData = function(req, res) {
-  conn.query('SELECT * FROM county_counts', function(error, data) {
+  conn.query("select count(photos.local_id) AS photos,count(distinct taxa.taxon) AS genera,count(distinct photos.type_specimen) AS type_specimen,locals_mod2.county_fips AS fips,group_concat(distinct ' ',strat.unit separator ',') AS strat from (((photos join locals_mod2 on((locals_mod2.id = photos.local_id))) join taxa on((taxa.photo_id = photos.id))) join strat on((strat.id = photos.strat_id))) group by locals_mod2.county_fips", function(error, data) {
     res.jsonp(data);
   });
 };
 
 exports.map = function(req, res) {
-  conn.query('SELECT * FROM county_counts', function(error, data) {
+  conn.query("select count(photos.local_id) AS photos,count(distinct taxa.taxon) AS genera,count(distinct photos.type_specimen) AS type_specimen,locals_mod2.county_fips AS fips,group_concat(distinct ' ',strat.unit separator ',') AS strat from (((photos join locals_mod2 on((locals_mod2.id = photos.local_id))) join taxa on((taxa.photo_id = photos.id))) join strat on((strat.id = photos.strat_id))) group by locals_mod2.county_fips", function(error, data) {
     if (typeof req.session.user_id == 'undefined') {
       var login_id = [];
     } else {
@@ -1217,7 +1205,7 @@ exports.searchRecent = function(req, res) {
     },
 
     function(page, limit, limita, limitb, pages, records, callback) {
-      conn.query("SELECT * FROM county_counts", function(err, rows, fields) {
+      conn.query("select count(photos.local_id) AS photos,count(distinct taxa.taxon) AS genera,count(distinct photos.type_specimen) AS type_specimen,locals_mod2.county_fips AS fips,group_concat(distinct ' ',strat.unit separator ',') AS strat from (((photos join locals_mod2 on((locals_mod2.id = photos.local_id))) join taxa on((taxa.photo_id = photos.id))) join strat on((strat.id = photos.strat_id))) group by locals_mod2.county_fips", function(err, rows, fields) {
         if (err) {
           callback(err);
         }
