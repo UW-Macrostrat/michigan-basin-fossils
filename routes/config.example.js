@@ -1,6 +1,6 @@
 module.exports = {
   "imagePath": "/Users/you/Sites/ummp/public/images/",
-  "project": "your project",
+  "project_no": 1,
   "credentials": {
     'host': 'localhost',
     'user': 'you',
