@@ -1208,7 +1208,7 @@ exports.searchRecent = function(req, res) {
     },
 
     function(page, limit, limita, limitb, pages, records, callback) {
-      conn.query("select count(photos.id) AS photos,count(distinct taxa.taxon) AS genera,(SELECT count(distinct photos.id) from photos where type_specimen not like '') AS type_specimen,locals_mod2.county_fips AS fips,group_concat(distinct ' ',strat.unit separator ',') AS strat FROM photos JOIN locals_mod2 on locals_mod2.id = photos.local_id JOIN taxa on taxa.photo_id = photos.id JOIN strat on strat.id = photos.strat_id group by locals_mod2.county_fips", function(err, rows, fields) {
+      conn.query("SELECT count(photos.id) AS photos,count(distinct taxa.taxon) AS genera,(SELECT count(distinct photos.id) from photos where type_specimen not like '') AS type_specimen,locals_mod2.county_fips AS fips,group_concat(distinct ' ',strat.unit separator ',') AS strat FROM photos JOIN userlog ON userlog.login=photos.login_id JOIN locals_mod2 on locals_mod2.id = photos.local_id JOIN taxa on taxa.photo_id = photos.id JOIN strat on strat.id = photos.strat_id WHERE " + projectWhere+ " GROUP BY locals_mod2.county_fips", function(err, rows, fields) {
         if (err) {
           callback(err);
         }
@@ -1218,7 +1218,7 @@ exports.searchRecent = function(req, res) {
     },
 
     function(page, limit, limita, limitb, pages, mapdata, callback) {
-      conn.query("SELECT photos.id, photos.title, photos.ummp, photos.type_specimen, DATE_FORMAT( photos.DATE,  '%Y-%m-%d' ) AS date, locals_mod2.city, locals_mod2.county, locals_mod2.state, strat.unit, LOWER(strat.rank) as rank, users.name, photo_notes.notes, (SELECT GROUP_CONCAT(' ', taxon, ' ', species) from taxa WHERE taxa.photo_id = photos.id) as taxa FROM photos LEFT OUTER JOIN locals_mod2 ON locals_mod2.id = photos.local_id LEFT OUTER JOIN strat ON strat.id = photos.strat_id LEFT OUTER JOIN userlog ON userlog.login = photos.login_id LEFT OUTER JOIN users ON users.username = userlog.name LEFT OUTER JOIN photo_notes ON photo_notes.photo_id = photos.id ORDER BY date DESC LIMIT " + limita + ",20", function(err, rows, fields) {
+      conn.query("SELECT photos.id, photos.title, photos.ummp, photos.type_specimen, DATE_FORMAT( photos.DATE,  '%Y-%m-%d' ) AS date, locals_mod2.city, locals_mod2.county, locals_mod2.state, strat.unit, LOWER(strat.rank) as rank, users.name, photo_notes.notes, (SELECT GROUP_CONCAT(' ', taxon, ' ', species) from taxa WHERE taxa.photo_id = photos.id) as taxa FROM photos JOIN locals_mod2 ON locals_mod2.id = photos.local_id JOIN strat ON strat.id = photos.strat_id JOIN userlog ON userlog.login = photos.login_id JOIN users ON users.username = userlog.name LEFT OUTER JOIN photo_notes ON photo_notes.photo_id = photos.id WHERE " + projectWhere+ " ORDER BY date DESC LIMIT " + limita + ",20", function(err, rows, fields) {
         if (err) {
           callback(err);
         }
