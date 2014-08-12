@@ -71,7 +71,7 @@ exports.autocomplete = function(req, res) {
 
     async.parallel({
       one: function(callback) {
-        conn.query('SELECT DISTINCT taxon AS label, "Taxa" as category FROM taxa WHERE taxon LIKE ?', [req.query.q + "%"], function(err, rows, fields) {
+        conn.query('SELECT DISTINCT taxon AS label, "Taxa" as category FROM taxa ' + projectJoin + ' WHERE ' + projectWhere +' and taxon LIKE ?', [req.query.q + "%"], function(err, rows, fields) {
           if (err) {
             callback(err);
           } else {
@@ -80,7 +80,7 @@ exports.autocomplete = function(req, res) {
         });
       },
       two: function(callback) {
-        conn.query('SELECT DISTINCT species AS label, "Species" as category FROM taxa WHERE species like ? ', [req.query.q + "%"], function(err, rows, fields) {
+        conn.query('SELECT DISTINCT species AS label, "Species" as category FROM taxa ' + projectJoin + ' WHERE ' + projectWhere +' and species like ? ', [req.query.q + "%"], function(err, rows, fields) {
           if (err) {
             callback(err);
           } else {
@@ -107,7 +107,7 @@ exports.autocomplete = function(req, res) {
         });
       },
       five: function(callback) {
-        conn.query('SELECT DISTINCT name AS label, "Users" as category FROM users WHERE name like ? ', ["%" + req.query.q + "%"], function(err, rows, fields) {
+        conn.query('SELECT DISTINCT users.name AS label, "Users" as category FROM users JOIN userlog ON users.username=userlog.name WHERE ' + projectWhere +' and users.name like ? ', ["%" + req.query.q + "%"], function(err, rows, fields) {
           if (err) {
             callback(err);
           } else {
@@ -183,7 +183,7 @@ exports.timeSeries = function(req, res) {
   } else {
     async.parallel([
       function(callback) {
-        conn.query('SELECT id AS chron_id, stage, age_bottom, age_top, (age_bottom - age_top) AS total_time, count FROM (SELECT chron.stage, chron.id, chron.age_bottom, chron.age_top FROM chron WHERE rank = "epoch" AND age_bottom < 500 AND age_bottom > 300 ORDER BY age_bottom DESC) c LEFT OUTER JOIN (SELECT COUNT(DISTINCT pbdb_genus) AS count, containing_stage from taxa JOIN photos ON photo_id = photos.id JOIN userlog on photos.login_id=login WHERE ' + projectWhere + ' and ' + req.session.query + ' GROUP BY containing_stage) p ON c.stage = p.containing_stage', function(error, data) {
+        conn.query('SELECT id AS chron_id, stage, age_bottom, age_top, (age_bottom - age_top) AS total_time, count FROM (SELECT chron.stage, chron.id, chron.age_bottom, chron.age_top FROM chron WHERE rank = "epoch" AND age_bottom < 500 AND age_bottom > 300) c LEFT OUTER JOIN (SELECT COUNT(DISTINCT pbdb_genus) AS count, containing_stage from taxa JOIN photos ON photo_id = photos.id JOIN userlog on photos.login_id=login WHERE ' + projectWhere + ' and ' + req.session.query + ' GROUP BY containing_stage) p ON c.stage = p.containing_stage ORDER BY age_bottom', function(error, data) {
           callback(null, data);
         });
       },
@@ -278,7 +278,7 @@ exports.advancedSearch = function(req, res) {
         });
       },
       commenters: function(callback) {
-        conn.query('SELECT DISTINCT users.name FROM photo_comments LEFT OUTER JOIN userlog ON userlog.login = photo_comments.login_id LEFT OUTER JOIN users ON users.username = userlog.name LEFT OUTER JOIN photos on photos.id = photo_comments.photo_id ORDER BY name ASC', function(err, rows, fields) {
+        conn.query('SELECT DISTINCT users.name FROM photo_comments JOIN userlog ON userlog.login = photo_comments.login_id JOIN users ON users.username = userlog.name ORDER BY name ASC', function(err, rows, fields) {
           callback(null, rows);
         });
       },
@@ -435,7 +435,7 @@ exports.upload = function(req, res) {
 exports.editRecord = function(req, res) {
   async.parallel({
     check: function(callback) {
-      conn.query('SELECT DISTINCT photos.id, users.name FROM photos LEFT OUTER JOIN userlog ON userlog.login = photos.login_id LEFT OUTER JOIN users ON users.username = userlog.name WHERE photos.id = ?', [req.params.id], function(err, rows, fields) {
+      conn.query('SELECT DISTINCT photos.id, users.name FROM photos JOIN userlog ON userlog.login = photos.login_id JOIN users ON users.username = userlog.name WHERE photos.id = ?', [req.params.id], function(err, rows, fields) {
         if (err) {
           callback(err);
         } else {
@@ -485,7 +485,7 @@ exports.editRecord = function(req, res) {
       });
     },
     result: function(callback) {
-      conn.query("SELECT DISTINCT photos.id, photos.title, photos.image_type, photos.ummp, photos.strat_id, photos.type_specimen, DATE_FORMAT( photos.DATE,  '%Y-%m-%d' ) AS date, locals_mod2.city, locals_mod2.county, locals_mod2.state, strat.unit, LOWER(strat.rank) as rank, users.name, photo_notes.notes FROM photos LEFT OUTER JOIN locals_mod2 ON locals_mod2.id = photos.local_id LEFT OUTER JOIN strat ON strat.id = photos.strat_id LEFT OUTER JOIN userlog ON userlog.login = photos.login_id LEFT OUTER JOIN users ON users.username = userlog.name LEFT OUTER JOIN photo_notes ON photo_notes.photo_id = photos.id WHERE photos.id = ?", [req.params.id],
+      conn.query("SELECT DISTINCT photos.id, photos.title, photos.image_type, photos.ummp, photos.strat_id, photos.type_specimen, DATE_FORMAT( photos.DATE,  '%Y-%m-%d' ) AS date, locals_mod2.city, locals_mod2.county, locals_mod2.state, strat.unit, LOWER(strat.rank) as rank, users.name, photo_notes.notes FROM photos JOIN locals_mod2 ON locals_mod2.id = photos.local_id JOIN strat ON strat.id = photos.strat_id JOIN userlog ON userlog.login = photos.login_id JOIN users ON users.username = userlog.name LEFT OUTER JOIN photo_notes ON photo_notes.photo_id = photos.id WHERE photos.id = ?", [req.params.id],
         function(err, rows, fields) {
           if (err) {
             callback(err);
@@ -547,7 +547,7 @@ exports.map = function(req, res) {
 exports.viewrecord = function(req, res) {
   async.parallel({
     mapdata: function(callback) {
-      conn.query("SELECT COUNT(photos.local_id) as photos, locals_mod2.county_fips as fips FROM photos LEFT OUTER JOIN locals_mod2 ON locals_mod2.id = photos.local_id LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id WHERE photos.id = ? GROUP BY locals_mod2.county_fips", [req.params.id], function(err, data) {
+      conn.query("SELECT COUNT(photos.id) as photos, locals_mod2.county_fips as fips FROM photos JOIN locals_mod2 ON locals_mod2.id = photos.local_id WHERE photos.id = ? GROUP BY locals_mod2.county_fips", [req.params.id], function(err, data) {
         if (err) {
           callback(err);
         } else {
@@ -623,7 +623,7 @@ exports.findByCounty = function(req, res) {
   }
 
   if (typeof req.session.query === 'undefined' || req.query.home == "true") {
-    conn.query("SELECT DISTINCT photos.id, photos.title, users.name, (SELECT GROUP_CONCAT(' ', taxon, ' ', species) FROM taxa WHERE taxa.photo_id = photos.id) as taxon FROM photos LEFT OUTER JOIN locals_mod2 ON locals_mod2.id = photos.local_id JOIN userlog ON userlog.login = photos.login_id JOIN users ON users.username = userlog.name LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id WHERE locals_mod2.county_fips = ? LIMIT " + req.query.limit + ", 20", [req.params.id], function(err, rows, fields) {
+    conn.query("SELECT DISTINCT photos.id, photos.title, users.name, (SELECT GROUP_CONCAT(' ', taxon, ' ', species) FROM taxa WHERE taxa.photo_id = photos.id) as taxon FROM photos JOIN locals_mod2 ON locals_mod2.id = photos.local_id JOIN userlog ON userlog.login = photos.login_id JOIN users ON users.username = userlog.name LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id WHERE " + projectWhere +" and locals_mod2.county_fips = ? LIMIT " + req.query.limit + ", 20", [req.params.id], function(err, rows, fields) {
       if (err) {
         console.log("findByCounty - ", err);
         res.jsonp([]);
@@ -632,7 +632,7 @@ exports.findByCounty = function(req, res) {
       }
     });
   } else {
-    conn.query("SELECT DISTINCT photos.id, photos.title, users.name, (SELECT GROUP_CONCAT(' ', taxon, ' ', species) from taxa WHERE taxa.photo_id = photos.id) as taxon FROM photos LEFT OUTER JOIN locals_mod2 ON locals_mod2.id = photos.local_id LEFT OUTER JOIN userlog ON userlog.login = photos.login_id LEFT OUTER JOIN users ON users.username = userlog.name LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id WHERE " + req.session.query + " AND locals_mod2.county_fips = ? LIMIT " + req.query.limit + ", 20", [req.params.id], function(err, rows, fields) {
+    conn.query("SELECT DISTINCT photos.id, photos.title, users.name, (SELECT GROUP_CONCAT(' ', taxon, ' ', species) from taxa WHERE taxa.photo_id = photos.id) as taxon FROM photos JOIN locals_mod2 ON locals_mod2.id = photos.local_id JOIN userlog ON userlog.login = photos.login_id JOIN users ON users.username = userlog.name LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id WHERE " + req.session.query + " AND " + projectWhere + " AND locals_mod2.county_fips = ? LIMIT " + req.query.limit + ", 20", [req.params.id], function(err, rows, fields) {
 
       if (err) {
         console.log("findByCounty - ", err);
@@ -837,7 +837,7 @@ exports.searchApp = function(req, res) {
     },
 
     function(limit, limita, limitb, pages, query, callback) {
-      conn.query("SELECT COUNT(distinct photos.id) as photos, COUNT(distinct taxa.taxon) as genera, COUNT(distinct case when photos.type_specimen != '' THEN photos.type_specimen END) as type_specimen, locals_mod2.county_fips as fips, (GROUP_CONCAT(DISTINCT ' ',strat.unit)) as strat FROM photos LEFT OUTER JOIN locals_mod2 ON locals_mod2.id = photos.local_id LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id LEFT OUTER JOIN strat ON strat.id = photos.strat_id WHERE " + query + " GROUP BY locals_mod2.county_fips", function(err, rows, fields) {
+      conn.query("SELECT COUNT(distinct photos.id) as photos, COUNT(distinct taxa.taxon) as genera, COUNT(distinct case when photos.type_specimen != '' THEN photos.type_specimen END) as type_specimen, locals_mod2.county_fips as fips, (GROUP_CONCAT(DISTINCT ' ',strat.unit)) as strat FROM photos  JOIN locals_mod2 ON locals_mod2.id = photos.local_id LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id JOIN strat ON strat.id = photos.strat_id WHERE " + query + " GROUP BY locals_mod2.county_fips", function(err, rows, fields) {
         if (err) {
           callback(err);
         }
@@ -847,7 +847,7 @@ exports.searchApp = function(req, res) {
     },
 
     function(limit, limita, limitb, pages, query, mapdata, callback) {
-      conn.query("SELECT DISTINCT photos.id, photos.title, photos.ummp, photos.type_specimen, DATE_FORMAT( photos.DATE,  '%Y-%m-%d' ) AS date, locals_mod2.city, locals_mod2.county, locals_mod2.state, strat.unit, LOWER(strat.rank) as rank, users.name, photo_notes.notes, (SELECT GROUP_CONCAT(' ', taxon, ' ', species) from taxa WHERE taxa.photo_id = photos.id) as taxa FROM photos LEFT OUTER JOIN locals_mod2 ON locals_mod2.id = photos.local_id LEFT OUTER JOIN strat ON strat.id = photos.strat_id LEFT OUTER JOIN userlog ON userlog.login = photos.login_id LEFT OUTER JOIN users ON users.username = userlog.name LEFT OUTER JOIN photo_notes ON photo_notes.photo_id = photos.id LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id WHERE " + query + " LIMIT " + limita + ",20", function(err, rows, fields) {
+      conn.query("SELECT DISTINCT photos.id, photos.title, photos.ummp, photos.type_specimen, DATE_FORMAT( photos.DATE,  '%Y-%m-%d' ) AS date, locals_mod2.city, locals_mod2.county, locals_mod2.state, strat.unit, LOWER(strat.rank) as rank, users.name, photo_notes.notes, (SELECT GROUP_CONCAT(' ', taxon, ' ', species) from taxa WHERE taxa.photo_id = photos.id) as taxa FROM photos JOIN locals_mod2 ON locals_mod2.id = photos.local_id JOIN strat ON strat.id = photos.strat_id JOIN userlog ON userlog.login = photos.login_id JOIN users ON users.username = userlog.name LEFT OUTER JOIN photo_notes ON photo_notes.photo_id = photos.id LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id WHERE " + query + " LIMIT " + limita + ",20", function(err, rows, fields) {
         if (err) {
           callback(err);
         }
@@ -1060,7 +1060,7 @@ exports.simpleSearch = function(req, res) {
     },
 
     function(page, query, limita, limitb, limit, pages, callback) {
-      conn.query("SELECT COUNT(distinct photos.id) as photos, COUNT(distinct taxa.taxon) as genera, COUNT(distinct case when photos.type_specimen != '' THEN photos.type_specimen END) as type_specimen, locals_mod2.county_fips as fips, (GROUP_CONCAT(DISTINCT ' ',strat.unit)) as strat FROM photos LEFT OUTER JOIN locals_mod2 ON locals_mod2.id = photos.local_id LEFT OUTER JOIN strat ON strat.id = photos.strat_id LEFT OUTER JOIN userlog ON userlog.login = photos.login_id LEFT OUTER JOIN users ON users.username = userlog.name LEFT OUTER JOIN photo_notes ON photo_notes.photo_id = photos.id LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id WHERE " + query + " GROUP BY locals_mod2.county_fips", function(err, rows, fields) {
+      conn.query("SELECT COUNT(distinct photos.id) as photos, COUNT(distinct taxa.taxon) as genera, COUNT(distinct case when photos.type_specimen != '' THEN photos.type_specimen END) as type_specimen, locals_mod2.county_fips as fips, (GROUP_CONCAT(DISTINCT ' ',strat.unit)) as strat FROM photos JOIN locals_mod2 ON locals_mod2.id = photos.local_id JOIN strat ON strat.id = photos.strat_id JOIN userlog ON userlog.login = photos.login_id JOIN users ON users.username = userlog.name LEFT OUTER JOIN photo_notes ON photo_notes.photo_id = photos.id LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id WHERE " + query + " GROUP BY locals_mod2.county_fips", function(err, rows, fields) {
         if (err) {
           callback(err);
         }
@@ -1070,7 +1070,7 @@ exports.simpleSearch = function(req, res) {
     },
 
     function(page, query, limita, limitb, limit, pages, mapdata, callback) {
-      conn.query("SELECT DISTINCT photos.id, photos.title, photos.ummp, photos.type_specimen, DATE_FORMAT( photos.DATE,  '%Y-%m-%d' ) AS date, locals_mod2.city, locals_mod2.county, locals_mod2.state, strat.unit, LOWER(strat.rank) as rank, users.name, photo_notes.notes, (SELECT GROUP_CONCAT(' ', taxon, ' ', species) from taxa WHERE taxa.photo_id = photos.id) as taxa FROM photos LEFT OUTER JOIN locals_mod2 ON locals_mod2.id = photos.local_id LEFT OUTER JOIN strat ON strat.id = photos.strat_id LEFT OUTER JOIN userlog ON userlog.login = photos.login_id LEFT OUTER JOIN users ON users.username = userlog.name LEFT OUTER JOIN photo_notes ON photo_notes.photo_id = photos.id LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id WHERE " + query + " LIMIT " + limita + ",20", function(err, rows, fields) {
+      conn.query("SELECT DISTINCT photos.id, photos.title, photos.ummp, photos.type_specimen, DATE_FORMAT( photos.DATE,  '%Y-%m-%d' ) AS date, locals_mod2.city, locals_mod2.county, locals_mod2.state, strat.unit, LOWER(strat.rank) as rank, users.name, photo_notes.notes, (SELECT GROUP_CONCAT(' ', taxon, ' ', species) from taxa WHERE taxa.photo_id = photos.id) as taxa FROM photos JOIN locals_mod2 ON locals_mod2.id = photos.local_id JOIN strat ON strat.id = photos.strat_id JOIN userlog ON userlog.login = photos.login_id JOIN users ON users.username = userlog.name LEFT OUTER JOIN photo_notes ON photo_notes.photo_id = photos.id LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id WHERE " + query + " LIMIT " + limita + ",20", function(err, rows, fields) {
         if (err) {
           callback(err);
         }
@@ -1114,7 +1114,7 @@ exports.searchRecent = function(req, res) {
       req.session.query = undefined;
       var page = req.query.page;
 
-      conn.query('SELECT COUNT(DISTINCT photos.id) as count FROM photos LEFT OUTER JOIN locals_mod2 ON locals_mod2.id = photos.local_id LEFT OUTER JOIN strat ON strat.id = photos.strat_id LEFT OUTER JOIN userlog ON userlog.login = photos.login_id LEFT OUTER JOIN users ON users.username = userlog.name LEFT OUTER JOIN photo_notes ON photo_notes.photo_id = photos.id LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id', function(err, rows, fields) {
+      conn.query('SELECT COUNT(photos.id) as count FROM photos ' + projectJoin +' WHERE ' + projectWhere + '', function(err, rows, fields) {
         if (err) {
           callback(err);
         }
@@ -1462,7 +1462,7 @@ function processQuery(params, req, res, page) {
 
     function(query, callback) {
       // Query to find the number of results (mostly checking if greater or less than 20)
-      conn.query("SELECT COUNT(DISTINCT photos.id) as count, IF(((SELECT COUNT(*) from photos WHERE " + query + ") > 20), 20, (SELECT COUNT(*) from photos WHERE " + query + ")) as test FROM photos LEFT OUTER JOIN locals_mod2 ON locals_mod2.id = photos.local_id LEFT OUTER JOIN strat ON strat.id = photos.strat_id LEFT OUTER JOIN userlog ON userlog.login = photos.login_id LEFT OUTER JOIN users ON users.username = userlog.name LEFT OUTER JOIN photo_notes ON photo_notes.photo_id = photos.id LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id WHERE " + query, function(err, rows, fields) {
+      conn.query("SELECT COUNT(DISTINCT photos.id) as count, IF(((SELECT COUNT(*) from photos WHERE " + query + ") > 20), 20, (SELECT COUNT(*) from photos WHERE " + query + ")) as test FROM photos JOIN locals_mod2 ON locals_mod2.id = photos.local_id JOIN strat ON strat.id = photos.strat_id JOIN userlog ON userlog.login = photos.login_id JOIN users ON users.username = userlog.name LEFT OUTER JOIN photo_notes ON photo_notes.photo_id = photos.id LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id WHERE " + query, function(err, rows, fields) {
         if (err) {
           callback(err);
         }
@@ -1635,7 +1635,7 @@ function processQuery(params, req, res, page) {
     },
 
     function(limit, limita, limitb, pages, query, callback) {
-      conn.query("SELECT COUNT(distinct photos.id) as photos, COUNT(distinct taxa.taxon) as genera, COUNT(distinct case when photos.type_specimen != '' THEN photos.type_specimen END) as type_specimen, locals_mod2.county_fips as fips, (GROUP_CONCAT(DISTINCT ' ',strat.unit)) as strat FROM photos LEFT OUTER JOIN locals_mod2 ON locals_mod2.id = photos.local_id LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id LEFT OUTER JOIN strat ON strat.id = photos.strat_id WHERE " + query + " GROUP BY locals_mod2.county_fips", function(err, rows, fields) {
+      conn.query("SELECT COUNT(distinct photos.id) as photos, COUNT(distinct taxa.taxon) as genera, COUNT(distinct case when photos.type_specimen != '' THEN photos.type_specimen END) as type_specimen, locals_mod2.county_fips as fips, (GROUP_CONCAT(DISTINCT ' ',strat.unit)) as strat FROM photos JOIN locals_mod2 ON locals_mod2.id = photos.local_id LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id JOIN strat ON strat.id = photos.strat_id WHERE " + query + " GROUP BY locals_mod2.county_fips", function(err, rows, fields) {
         if (err) {
           callback(err);
         } else {
@@ -1646,7 +1646,7 @@ function processQuery(params, req, res, page) {
     },
 
     function(limit, limita, pages, query, mapdata, callback) {
-      conn.query("SELECT DISTINCT photos.id, photos.title, photos.ummp, photos.type_specimen, DATE_FORMAT( photos.DATE,  '%Y-%m-%d' ) AS date, locals_mod2.city, locals_mod2.county, locals_mod2.state, strat.unit, LOWER(strat.rank) as rank, users.name, photo_notes.notes, (SELECT GROUP_CONCAT(' ', taxon, ' ', species) from taxa WHERE taxa.photo_id = photos.id) as taxa FROM photos LEFT OUTER JOIN locals_mod2 ON locals_mod2.id = photos.local_id LEFT OUTER JOIN strat ON strat.id = photos.strat_id LEFT OUTER JOIN userlog ON userlog.login = photos.login_id LEFT OUTER JOIN users ON users.username = userlog.name LEFT OUTER JOIN photo_notes ON photo_notes.photo_id = photos.id LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id WHERE " + query + " LIMIT " + limita + ",20", function(err, rows, fields) {
+      conn.query("SELECT DISTINCT photos.id, photos.title, photos.ummp, photos.type_specimen, DATE_FORMAT( photos.DATE,  '%Y-%m-%d' ) AS date, locals_mod2.city, locals_mod2.county, locals_mod2.state, strat.unit, LOWER(strat.rank) as rank, users.name, photo_notes.notes, (SELECT GROUP_CONCAT(' ', taxon, ' ', species) from taxa WHERE taxa.photo_id = photos.id) as taxa FROM photos JOIN locals_mod2 ON locals_mod2.id = photos.local_id JOIN strat ON strat.id = photos.strat_id JOIN userlog ON userlog.login = photos.login_id JOIN users ON users.username = userlog.name LEFT OUTER JOIN photo_notes ON photo_notes.photo_id = photos.id LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id WHERE " + query + " LIMIT " + limita + ",20", function(err, rows, fields) {
         if (err) {
           callback(err);
         } else {
