@@ -22,7 +22,7 @@ exports.login = function(req, res) {
           seconds = d.getSeconds(),
           fullDate = year + "-" + month + "-" + day + " " + hours + ":" + minutes + ":" + seconds;
 
-      var post = {ip: ipAddress, name: req.session.user_id, date: year + "-" + month + "-" + day, time: hours + ":" + minutes + ":" + seconds, time_start: fullDate, time_end: "0000-00-00 00:00:00"};
+      var post = {ip: ipAddress, project_id: config.project_id, name: req.session.user_id, date: year + "-" + month + "-" + day, time: hours + ":" + minutes + ":" + seconds, time_start: fullDate, time_end: "0000-00-00 00:00:00"};
 
       conn.query('INSERT INTO userlog SET ?', post, function(err, rows, fields) {
         if (err) {

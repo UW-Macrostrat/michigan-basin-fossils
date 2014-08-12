@@ -1,4 +1,7 @@
-var async = require('async');
+var config = require('./config');
+    async = require('async');
+    projectJoin = "JOIN userlog ON login_id = userlog.login";
+    projectWhere = "userlog.project_id = " + config.project_id;
 
 exports.logout = function(req, res) {
   var d = new Date(),
@@ -23,22 +26,22 @@ exports.root = function(req, res) {
 
     async.parallel({
       one: function(callback) {
-        conn.query('SELECT DISTINCT (id) FROM photos WHERE cover_pic = 1 ORDER BY RAND() LIMIT 1', function(error, rows, fields) {
+        conn.query('SELECT DISTINCT (photos.id) FROM photos ' + projectJoin + ' WHERE ' + projectWhere + ' and cover_pic = 1 ORDER BY RAND() LIMIT 1', function(error, rows, fields) {
           callback(null, rows);
         });
       },
       two: function(callback) {
-        conn.query('SELECT DISTINCT (id) FROM photos ORDER BY RAND() LIMIT 16', function(err, rows, fields) {
+        conn.query('SELECT DISTINCT (photos.id) FROM photos ' + projectJoin + ' WHERE ' + projectWhere + ' ORDER BY RAND() LIMIT 16', function(err, rows, fields) {
           callback(null, rows);
         });
       },
       three: function(callback) {
-        conn.query("select (select count(distinct taxa.photo_id) from (taxa join jjs_higher_taxa) where ((taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 279))) AS arthropodCount,(select count(distinct taxa.photo_id) from (taxa join jjs_higher_taxa) where ((taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 413))) AS echinodermCount,(select count(distinct taxa.photo_id) from (taxa join jjs_higher_taxa) where ((taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 384))) AS brachiopodCount,(select count(distinct taxa.photo_id) from (taxa join jjs_higher_taxa) where ((taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 64))) AS coralCount,(select distinct taxa.photo_id from ((photos join taxa) join jjs_higher_taxa) where ((taxa.photo_id = photos.id) and (photos.cover_pic = 1) and (taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 279)) order by rand() limit 1) AS uniqueArthropod,(select distinct taxa.photo_id from ((photos join taxa) join jjs_higher_taxa) where ((taxa.photo_id = photos.id) and (photos.cover_pic = 1) and (taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 413)) order by rand() limit 1) AS unqiueEchinoderm,(select distinct taxa.photo_id from ((photos join taxa) join jjs_higher_taxa) where ((taxa.photo_id = photos.id) and (photos.cover_pic = 1) and (taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 384)) order by rand() limit 1) AS uniqueBrachiopod,(select distinct taxa.photo_id from ((photos join taxa) join jjs_higher_taxa) where ((taxa.photo_id = photos.id) and (photos.cover_pic = 1) and (taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 64)) order by rand() limit 1) AS uniqueCoral,(select count(distinct taxa.taxon,taxa.species) AS taxa from taxa) AS taxaCount,(select count(distinct users.name) AS users from users) AS users,(select count(distinct photos.id) AS photos from photos) AS photos,(select date_format(photos.date,'%M %d, %Y') from photos order by photos.date desc limit 1) AS mostRecent", function(err, rows, fields) {
+        conn.query("select (select count(distinct taxa.photo_id) FROM taxa " + projectJoin + " WHERE " + projectWhere + " and taxa.pbdb_phylum = 'Arthropoda') AS arthropodCount, (select count(distinct taxa.photo_id) FROM taxa " + projectJoin + " WHERE " + projectWhere + " and taxa.pbdb_phylum = 'Echinodermata') AS echinodermCount, (select count(distinct taxa.photo_id) FROM taxa " + projectJoin + " WHERE " + projectWhere + " and taxa.pbdb_phylum = 'Brachiopoda') AS brachiopodCount,(select count(distinct taxa.photo_id) FROM taxa " + projectJoin + " WHERE " + projectWhere + " and taxa.pbdb_class = 'Anthozoa') AS coralCount, (select distinct taxa.photo_id FROM photos join taxa ON taxa.photo_id = photos.id JOIN userlog on photos.login_id = login WHERE " + projectWhere + " and photos.cover_pic = 1 and taxa.pbdb_phylum = 'Arthropoda' order by rand() limit 1) AS uniqueArthropod, (select distinct taxa.photo_id FROM photos JOIN taxa ON taxa.photo_id = photos.id JOIN userlog on photos.login_id = login WHERE " + projectWhere + " and photos.cover_pic = 1 and taxa.pbdb_phylum = 'Echinodermata' order by rand() limit 1) AS unqiueEchinoderm, (select distinct taxa.photo_id FROM photos JOIN taxa ON taxa.photo_id = photos.id JOIN userlog on photos.login_id = login WHERE " + projectWhere + " and photos.cover_pic = 1 and taxa.pbdb_phylum = 'Brachiopoda' order by rand() limit 1) AS uniqueBrachiopod, (select distinct taxa.photo_id FROM photos JOIN taxa ON taxa.photo_id = photos.id JOIN userlog on photos.login_id = login WHERE " + projectWhere + " and photos.cover_pic = 1 and taxa.pbdb_class = 'Anthozoa' order by rand() limit 1) AS uniqueCoral, (select count(distinct taxon) AS taxa FROM taxa " + projectJoin + " WHERE " + projectWhere + ") AS taxaCount, (select count(distinct users.name) AS users FROM users JOIN userlog ON userlog.name=users.username WHERE " + projectWhere + ") AS users, (select count(distinct photos.id) AS photos FROM photos " + projectJoin + " WHERE " + projectWhere + ") AS photos, (select date_format(photos.date,'%M %d, %Y') FROM photos " + projectJoin + " WHERE " + projectWhere + " order by photos.date desc limit 1) AS mostRecent", function(err, rows, fields) {
           callback(null, rows);
         });
       },
       four: function(callback) {
-        conn.query("select count(photos.local_id) AS photos,count(distinct taxa.taxon) AS genera,count(distinct photos.type_specimen) AS type_specimen,locals_mod2.county_fips AS fips,group_concat(distinct ' ',strat.unit separator ',') AS strat from (((photos join locals_mod2 on((locals_mod2.id = photos.local_id))) join taxa on((taxa.photo_id = photos.id))) join strat on((strat.id = photos.strat_id))) group by locals_mod2.county_fips", function(err, rows, fields) {
+        conn.query("select count(distinct photos.id) AS photos,count(distinct taxa.pbdb_taxon_no) AS genera,count(distinct photos.type_specimen) AS type_specimen,locals_mod2.county_fips AS fips,group_concat(distinct ' ',strat.unit separator ',') AS strat FROM photos JOIN locals_mod2 on locals_mod2.id = photos.local_id JOIN taxa on taxa.photo_id = photos.id JOIN strat on strat.id = photos.strat_id JOIN userlog on photos.login_id=login WHERE " + projectWhere + " group by locals_mod2.county_fips", function(err, rows, fields) {
           callback(null, rows)
         });
       }
@@ -134,26 +137,26 @@ exports.statPage = function(req, res) {
 }
 
 exports.randomPhotos = function(req, res) {
-  conn.query('SELECT DISTINCT (id) FROM photos ORDER BY RAND() LIMIT ' + req.params.id, function(error, data) {
+  conn.query('SELECT distinct photos.id FROM photos ' + projectJoin + ' WHERE ' + projectWhere + ' ORDER BY RAND() LIMIT ' + req.params.id, function(error, data) {
     res.jsonp(data);
   });
 }
 
 exports.stats = function(req, res) {
-  conn.query("select (select count(distinct taxa.photo_id) from (taxa join jjs_higher_taxa) where ((taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 279))) AS arthropodCount,(select count(distinct taxa.photo_id) from (taxa join jjs_higher_taxa) where ((taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 413))) AS echinodermCount,(select count(distinct taxa.photo_id) from (taxa join jjs_higher_taxa) where ((taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 384))) AS brachiopodCount,(select count(distinct taxa.photo_id) from (taxa join jjs_higher_taxa) where ((taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 64))) AS coralCount,(select distinct taxa.photo_id from ((photos join taxa) join jjs_higher_taxa) where ((taxa.photo_id = photos.id) and (photos.cover_pic = 1) and (taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 279)) order by rand() limit 1) AS uniqueArthropod,(select distinct taxa.photo_id from ((photos join taxa) join jjs_higher_taxa) where ((taxa.photo_id = photos.id) and (photos.cover_pic = 1) and (taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 413)) order by rand() limit 1) AS unqiueEchinoderm,(select distinct taxa.photo_id from ((photos join taxa) join jjs_higher_taxa) where ((taxa.photo_id = photos.id) and (photos.cover_pic = 1) and (taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 384)) order by rand() limit 1) AS uniqueBrachiopod,(select distinct taxa.photo_id from ((photos join taxa) join jjs_higher_taxa) where ((taxa.photo_id = photos.id) and (photos.cover_pic = 1) and (taxa.class_id = jjs_higher_taxa.id) and (jjs_higher_taxa.belongs_to = 64)) order by rand() limit 1) AS uniqueCoral,(select count(distinct taxa.taxon,taxa.species) AS taxa from taxa) AS taxaCount,(select count(distinct users.name) AS users from users) AS users,(select count(distinct photos.id) AS photos from photos) AS photos,(select date_format(photos.date,'%M %d, %Y') from photos order by photos.date desc limit 1) AS mostRecent", function(error, data) {
+  conn.query("select (select count(distinct taxa.photo_id) FROM taxa " + projectJoin + " WHERE " + projectWhere + " and taxa.pbdb_phylum = 'Arthropoda') AS arthropodCount, (select count(distinct taxa.photo_id) FROM taxa " + projectJoin + " WHERE " + projectWhere + " and taxa.pbdb_phylum = 'Echinodermata') AS echinodermCount, (select count(distinct taxa.photo_id) FROM taxa " + projectJoin + " WHERE " + projectWhere + " and taxa.pbdb_phylum = 'Brachiopoda') AS brachiopodCount,(select count(distinct taxa.photo_id) FROM taxa " + projectJoin + " WHERE " + projectWhere + " and taxa.pbdb_class = 'Anthozoa') AS coralCount, (select distinct taxa.photo_id FROM photos join taxa ON taxa.photo_id = photos.id JOIN userlog on photos.login_id = login WHERE " + projectWhere + " and photos.cover_pic = 1 and taxa.pbdb_phylum = 'Arthropoda' order by rand() limit 1) AS uniqueArthropod, (select distinct taxa.photo_id FROM photos JOIN taxa ON taxa.photo_id = photos.id JOIN userlog on photos.login_id = login WHERE " + projectWhere + " and photos.cover_pic = 1 and taxa.pbdb_phylum = 'Echinodermata' order by rand() limit 1) AS unqiueEchinoderm, (select distinct taxa.photo_id FROM photos JOIN taxa ON taxa.photo_id = photos.id JOIN userlog on photos.login_id = login WHERE " + projectWhere + " and photos.cover_pic = 1 and taxa.pbdb_phylum = 'Brachiopoda' order by rand() limit 1) AS uniqueBrachiopod, (select distinct taxa.photo_id FROM photos JOIN taxa ON taxa.photo_id = photos.id JOIN userlog on photos.login_id = login WHERE " + projectWhere + " and photos.cover_pic = 1 and taxa.pbdb_class = 'Anthozoa' order by rand() limit 1) AS uniqueCoral, (select count(distinct taxon) AS taxa FROM taxa " + projectJoin + " WHERE " + projectWhere + ") AS taxaCount, (select count(distinct users.name) AS users FROM users JOIN userlog ON userlog.name=users.username WHERE " + projectWhere + ") AS users, (select count(distinct photos.id) AS photos FROM photos " + projectJoin + " WHERE " + projectWhere + ") AS photos, (select date_format(photos.date,'%M %d, %Y') FROM photos " + projectJoin + " WHERE " + projectWhere + " order by photos.date desc limit 1) AS mostRecent", function(error, data) {
     res.jsonp(data);
   });
 
 }
 
 exports.monthly_stats = function(req, res) {
-  conn.query('select monthname(photos.date) AS month,year(photos.date) AS year,count(0) AS sum from photos group by year(photos.date),month(photos.date)', function(error, data) {
+  conn.query('select monthname(photos.date) AS month,year(photos.date) AS year,count(0) AS sum FROM photos ' + projectJoin + ' WHERE ' + projectWhere + ' GROUP BY year(photos.date),month(photos.date)', function(error, data) {
     res.jsonp(data);
   });
 }
 
 exports.user_contributions = function(req, res) {
-  conn.query('select count(distinct photos.id) AS count,users.name AS name from ((((((photos left join locals_mod2 on((locals_mod2.id = photos.local_id))) left join strat on((strat.id = photos.strat_id))) left join userlog on((userlog.login = photos.login_id))) left join users on((users.username = userlog.name))) left join photo_notes on((photo_notes.photo_id = photos.id))) left join taxa on((taxa.photo_id = photos.id))) group by users.name', function(error, data) {
+  conn.query('SELECT count(distinct photos.id) AS count,users.name AS name FROM photos JOIN userlog on userlog.login = photos.login_id JOIN users on users.username = userlog.name WHERE ' + projectWhere + ' GROUP BY users.username', function(error, data) {
     res.jsonp(data);
   });
 }
@@ -162,7 +165,7 @@ exports.timeSeries = function(req, res) {
   if (req.query.stats === "true" || typeof req.session.query === "undefined") {
     async.parallel([
       function(callback) {
-        conn.query('SELECT id AS chron_id, stage, age_bottom, age_top, (age_bottom - age_top) AS total_time, count FROM (SELECT chron.stage, chron.id, chron.age_bottom, chron.age_top FROM chron WHERE rank = "epoch" AND age_bottom < 500 AND age_bottom > 300 ORDER BY age_bottom DESC) c LEFT OUTER JOIN (SELECT COUNT(DISTINCT pbdb_genus) AS count, containing_stage from taxa JOIN photos ON photo_id = photos.id GROUP BY containing_stage) p ON c.stage = p.containing_stage', function(error, data) {
+        conn.query('SELECT id AS chron_id, stage, age_bottom, age_top, (age_bottom - age_top) AS total_time, count FROM (SELECT chron.stage, chron.id, chron.age_bottom, chron.age_top FROM chron WHERE rank = "epoch" AND age_bottom < 500 AND age_bottom > 300 ORDER BY age_bottom DESC) c LEFT OUTER JOIN (SELECT COUNT(DISTINCT pbdb_genus) AS count, containing_stage FROM taxa JOIN photos ON photo_id = photos.id JOIN userlog on photos.login_id=login WHERE ' + projectWhere + ' GROUP BY containing_stage) p ON c.stage = p.containing_stage order by age_bottom', function(error, data) {
           callback(null, data);
         });
       },
@@ -180,7 +183,7 @@ exports.timeSeries = function(req, res) {
   } else {
     async.parallel([
       function(callback) {
-        conn.query('SELECT id AS chron_id, stage, age_bottom, age_top, (age_bottom - age_top) AS total_time, count FROM (SELECT chron.stage, chron.id, chron.age_bottom, chron.age_top FROM chron WHERE rank = "epoch" AND age_bottom < 500 AND age_bottom > 300 ORDER BY age_bottom DESC) c LEFT OUTER JOIN (SELECT COUNT(DISTINCT pbdb_genus) AS count, containing_stage from taxa JOIN photos ON photo_id = photos.id WHERE ' + req.session.query + ' GROUP BY containing_stage) p ON c.stage = p.containing_stage', function(error, data) {
+        conn.query('SELECT id AS chron_id, stage, age_bottom, age_top, (age_bottom - age_top) AS total_time, count FROM (SELECT chron.stage, chron.id, chron.age_bottom, chron.age_top FROM chron WHERE rank = "epoch" AND age_bottom < 500 AND age_bottom > 300 ORDER BY age_bottom DESC) c LEFT OUTER JOIN (SELECT COUNT(DISTINCT pbdb_genus) AS count, containing_stage from taxa JOIN photos ON photo_id = photos.id JOIN userlog on photos.login_id=login WHERE ' + projectWhere + ' and ' + req.session.query + ' GROUP BY containing_stage) p ON c.stage = p.containing_stage', function(error, data) {
           callback(null, data);
         });
       },
@@ -310,7 +313,7 @@ exports.advancedSearch = function(req, res) {
         });
       },
       mapdata: function(callback) {
-        conn.query("select count(photos.local_id) AS photos,count(distinct taxa.taxon) AS genera,count(distinct photos.type_specimen) AS type_specimen,locals_mod2.county_fips AS fips,group_concat(distinct ' ',strat.unit separator ',') AS strat from (((photos join locals_mod2 on((locals_mod2.id = photos.local_id))) join taxa on((taxa.photo_id = photos.id))) join strat on((strat.id = photos.strat_id))) group by locals_mod2.county_fips", function(err, rows, fields) {
+        conn.query("SELECT count(photos.local_id) AS photos,count(distinct taxa.taxon) AS genera,count(distinct photos.type_specimen) AS type_specimen,locals_mod2.county_fips AS fips,group_concat(distinct ' ',strat.unit separator ',') AS strat FROM photos JOIN locals_mod2 on locals_mod2.id = photos.local_id JOIN taxa on taxa.photo_id = photos.id JOIN strat on strat.id = photos.strat_id JOIN userlog on photos.login_id=login WHERE " + projectWhere + " group by locals_mod2.county_fips", function(err, rows, fields) {
           callback(null, rows);
         });
       }
@@ -522,13 +525,13 @@ exports.editRecord = function(req, res) {
 
 // Used to populate the map on the home page
 exports.mapData = function(req, res) {
-  conn.query("select count(photos.local_id) AS photos,count(distinct taxa.taxon) AS genera,count(distinct photos.type_specimen) AS type_specimen,locals_mod2.county_fips AS fips,group_concat(distinct ' ',strat.unit separator ',') AS strat from (((photos join locals_mod2 on((locals_mod2.id = photos.local_id))) join taxa on((taxa.photo_id = photos.id))) join strat on((strat.id = photos.strat_id))) group by locals_mod2.county_fips", function(error, data) {
+  conn.query("SELECT count(photos.id) AS photos,count(distinct taxa.taxon) AS genera, count(distinct photos.type_specimen) AS type_specimen,locals_mod2.county_fips AS fips,group_concat(distinct ' ',strat.unit separator ',') AS strat FROM photos JOIN locals_mod2 on locals_mod2.id = photos.local_id JOIN taxa on taxa.photo_id = photos.id JOIN strat on strat.id = photos.strat_id JOIN userlog ON photos.login_id=login WHERE " + projectWhere + " GROUP BY locals_mod2.county_fips", function(error, data) {
     res.jsonp(data);
   });
 };
 
 exports.map = function(req, res) {
-  conn.query("select count(photos.local_id) AS photos,count(distinct taxa.taxon) AS genera,count(distinct photos.type_specimen) AS type_specimen,locals_mod2.county_fips AS fips,group_concat(distinct ' ',strat.unit separator ',') AS strat from (((photos join locals_mod2 on((locals_mod2.id = photos.local_id))) join taxa on((taxa.photo_id = photos.id))) join strat on((strat.id = photos.strat_id))) group by locals_mod2.county_fips", function(error, data) {
+  conn.query("select count(photos.id) AS photos,count(distinct taxa.taxon) AS genera,count(distinct photos.type_specimen) AS type_specimen,locals_mod2.county_fips AS fips,group_concat(distinct ' ',strat.unit separator ',') AS strat FROM photos JOIN locals_mod2 on locals_mod2.id = photos.local_id JOIN taxa on taxa.photo_id = photos.id JOIN strat on strat.id = photos.strat_id JOIN userlog ON photos.login_id=login WHERE " + projectWhere + " GROUP BY locals_mod2.county_fips", function(error, data) {
     if (typeof req.session.user_id == 'undefined') {
       var login_id = [];
     } else {
@@ -553,7 +556,7 @@ exports.viewrecord = function(req, res) {
       });
     },
     photoComments: function(callback) {
-      conn.query("SELECT photo_comments.id, photo_comments.comments, photo_comments.photo_id, DATE_FORMAT( photo_comments.post_time, '%M %d, %Y at %l:%i %p' ) AS post_time, users.name FROM photo_comments LEFT OUTER JOIN userlog ON userlog.login = photo_comments.login_id LEFT OUTER JOIN users ON users.username = userlog.name LEFT OUTER JOIN photos on photos.id = photo_comments.photo_id WHERE photo_comments.photo_id = ?", [req.params.id], function(err, rows, fields) {
+      conn.query("SELECT photo_comments.id, photo_comments.comments, photo_comments.photo_id, DATE_FORMAT( photo_comments.post_time, '%M %d, %Y at %l:%i %p' ) AS post_time, users.name FROM photo_comments JOIN userlog ON userlog.login = photo_comments.login_id JOIN users ON users.username = userlog.name JOIN photos on photos.id = photo_comments.photo_id WHERE photo_comments.photo_id = ?", [req.params.id], function(err, rows, fields) {
         if (err) {
           callback(err);
         } else {
@@ -571,7 +574,7 @@ exports.viewrecord = function(req, res) {
       });
     },
     result: function(callback) {
-      conn.query("SELECT DISTINCT photos.id, photos.title, photos.ummp, photos.type_specimen, photos.stage, photos.containing_stage, photos.chron_id, DATE_FORMAT( photos.DATE,  '%Y-%m-%d' ) AS date, locals_mod2.city, locals_mod2.county, locals_mod2.state, strat.unit, LOWER(strat.rank) as rank, users.name, photo_notes.notes, (SELECT GROUP_CONCAT(' ', taxon, ' ', species) from taxa WHERE taxa.photo_id = photos.id) as taxa FROM photos LEFT OUTER JOIN locals_mod2 ON locals_mod2.id = photos.local_id LEFT OUTER JOIN strat ON strat.id = photos.strat_id LEFT OUTER JOIN userlog ON userlog.login = photos.login_id LEFT OUTER JOIN users ON users.username = userlog.name LEFT OUTER JOIN photo_notes ON photo_notes.photo_id = photos.id LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id WHERE photos.id = ? LIMIT  0,20", [req.params.id],
+      conn.query("SELECT DISTINCT photos.id, photos.title, photos.ummp, photos.type_specimen, photos.stage, photos.containing_stage, photos.chron_id, DATE_FORMAT( photos.DATE,  '%Y-%m-%d' ) AS date, locals_mod2.city, locals_mod2.county, locals_mod2.state, strat.unit, LOWER(strat.rank) as rank, users.name, photo_notes.notes, (SELECT GROUP_CONCAT(' ', taxon, ' ', species) FROM taxa WHERE taxa.photo_id = photos.id) as taxa FROM photos JOIN locals_mod2 ON locals_mod2.id = photos.local_id JOIN strat ON strat.id = photos.strat_id JOIN userlog ON userlog.login = photos.login_id JOIN users ON users.username = userlog.name LEFT OUTER JOIN photo_notes ON photo_notes.photo_id = photos.id JOIN taxa ON taxa.photo_id = photos.id WHERE photos.id = ? LIMIT  0,20", [req.params.id],
         function(err, rows, fields) {
         if (err) {
           callback(err);
@@ -620,7 +623,7 @@ exports.findByCounty = function(req, res) {
   }
 
   if (typeof req.session.query === 'undefined' || req.query.home == "true") {
-    conn.query("SELECT DISTINCT photos.id, photos.title, users.name, (SELECT GROUP_CONCAT(' ', taxon, ' ', species) from taxa WHERE taxa.photo_id = photos.id) as taxon FROM photos LEFT OUTER JOIN locals_mod2 ON locals_mod2.id = photos.local_id LEFT OUTER JOIN userlog ON userlog.login = photos.login_id LEFT OUTER JOIN users ON users.username = userlog.name LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id WHERE locals_mod2.county_fips = ? LIMIT " + req.query.limit + ", 20", [req.params.id], function(err, rows, fields) {
+    conn.query("SELECT DISTINCT photos.id, photos.title, users.name, (SELECT GROUP_CONCAT(' ', taxon, ' ', species) FROM taxa WHERE taxa.photo_id = photos.id) as taxon FROM photos LEFT OUTER JOIN locals_mod2 ON locals_mod2.id = photos.local_id JOIN userlog ON userlog.login = photos.login_id JOIN users ON users.username = userlog.name LEFT OUTER JOIN taxa ON taxa.photo_id = photos.id WHERE locals_mod2.county_fips = ? LIMIT " + req.query.limit + ", 20", [req.params.id], function(err, rows, fields) {
       if (err) {
         console.log("findByCounty - ", err);
         res.jsonp([]);
@@ -1205,7 +1208,7 @@ exports.searchRecent = function(req, res) {
     },
 
     function(page, limit, limita, limitb, pages, records, callback) {
-      conn.query("select count(photos.local_id) AS photos,count(distinct taxa.taxon) AS genera,count(distinct photos.type_specimen) AS type_specimen,locals_mod2.county_fips AS fips,group_concat(distinct ' ',strat.unit separator ',') AS strat from (((photos join locals_mod2 on((locals_mod2.id = photos.local_id))) join taxa on((taxa.photo_id = photos.id))) join strat on((strat.id = photos.strat_id))) group by locals_mod2.county_fips", function(err, rows, fields) {
+      conn.query("select count(photos.id) AS photos,count(distinct taxa.taxon) AS genera,(SELECT count distinct photos.id where type_specimen not like '') AS type_specimen,locals_mod2.county_fips AS fips,group_concat(distinct ' ',strat.unit separator ',') AS strat from (((photos join locals_mod2 on((locals_mod2.id = photos.local_id))) join taxa on((taxa.photo_id = photos.id))) join strat on((strat.id = photos.strat_id))) group by locals_mod2.county_fips", function(err, rows, fields) {
         if (err) {
           callback(err);
         }

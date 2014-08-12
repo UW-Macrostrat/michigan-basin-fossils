@@ -1,6 +1,10 @@
+var config = require('./config');
+    projectJoin = "JOIN userlog ON login_id = userlog.login";
+    projectWhere = "userlog.project_id = " + config.project_id;
+
 exports.findAll = function(req, res) {
  connection.getConnection(function(err, connection) {
-    connection.query('SELECT * FROM taxa LIMIT 20', function(error, data) {
+    connection.query('SELECT taxa.* FROM taxa ' + projectJoin + ' WHERE ' + projectWhere + ' LIMIT 20', function(error, data) {
       connection.release();
       res.jsonp(data);
     });
@@ -9,7 +13,7 @@ exports.findAll = function(req, res) {
 
 exports.recent = function(req, res) {
   connection.getConnection(function(err, connection) {
-    connection.query('SELECT * FROM photos ORDER BY date DESC LIMIT 20', function(error, data) {
+    connection.query('SELECT photos.* FROM photos ' + projectJoin + ' WHERE ' + projectWhere+ ' ORDER BY date DESC LIMIT 20', function(error, data) {
       connection.release();
       res.jsonp(data);
     });
@@ -18,7 +22,7 @@ exports.recent = function(req, res) {
 
 exports.findById = function(req, res) {
  connection.getConnection(function(err, connection) {
-    connection.query('SELECT * FROM taxa WHERE id = ?', [req.params.id], function(error, data) {
+    connection.query('SELECT taxa.* FROM taxa ' + projectJoin + ' WHERE ' + projectWhere + ' and taxa.id = ?', [req.params.id], function(error, data) {
       connection.release();
       res.jsonp(data);
     });
@@ -27,7 +31,7 @@ exports.findById = function(req, res) {
 
 exports.findByPhylum = function(req, res) {
   connection.getConnection(function(err, connection) {
-    connection.query('SELECT * FROM photos WHERE photos.id in (SELECT photo_id from taxa,JJS_higher_taxa where class_id=JJS_higher_taxa.id and belongs_to= ?) order by date DESC', [req.params.id], function(error, data) {
+    connection.query('SELECT photos.* FROM photos ' + projectJoin + ' WHERE ' + projectWhere + ' and photos.id in (SELECT photo_id from taxa,JJS_higher_taxa where class_id=JJS_higher_taxa.id and belongs_to= ?) order by date DESC', [req.params.id], function(error, data) {
       connection.release();
       res.jsonp(data);
     });
@@ -36,7 +40,7 @@ exports.findByPhylum = function(req, res) {
 
 exports.findByTaxon = function(err, req, res) {
   connection.getConnection(function(err, connection) {
-    connection.query('SELECT * FROM taxa WHERE taxon LIKE ? AND species LIKE ?', ["%" + req.query.name + "%", "%" + req.query.species + "%"], function(error, data) {
+    connection.query('SELECT taxa.* FROM taxa ' + projectJoin + ' WHERE ' + projectWhere + ' and taxon LIKE ? AND species LIKE ?', ["%" + req.query.name + "%", "%" + req.query.species + "%"], function(error, data) {
       connection.release();
       res.jsonp(data);
     });
@@ -46,7 +50,7 @@ exports.findByTaxon = function(err, req, res) {
 exports.photos = function(req, res) {
   if (req.query.phylum) {
     connection.getConnection(function(err, connection) {
-      connection.query('SELECT * FROM photos WHERE photos.id in (SELECT photo_id from taxa,JJS_higher_taxa where class_id=JJS_higher_taxa.id and belongs_to= ?) order by date DESC', [req.query.phylum], function(error, data) {
+      connection.query('SELECT photos.* FROM photos ' + projectJoin + ' WHERE ' + projectWhere + ' and photos.id in (SELECT photo_id from taxa,JJS_higher_taxa where class_id=JJS_higher_taxa.id and belongs_to= ?) order by date DESC', [req.query.phylum], function(error, data) {
         connection.release();
         res.jsonp(data);
       });
@@ -230,7 +234,7 @@ if (req.query.pid) {
 
     where = undefined;
     
-    connection.query("SELECT * FROM photos WHERE " + query, function(err, rows, fields) {
+    connection.query("SELECT photos.* FROM photos "  + projectWhere + " WHERE " + projectWhere + " and " + query, function(err, rows, fields) {
       if (err) throw err;
       res.render('searchResults', {result: rows});
     });
