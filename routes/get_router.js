@@ -1208,7 +1208,7 @@ exports.searchRecent = function(req, res) {
     },
 
     function(page, limit, limita, limitb, pages, records, callback) {
-      conn.query("select count(photos.id) AS photos,count(distinct taxa.taxon) AS genera,(SELECT count distinct photos.id where type_specimen not like '') AS type_specimen,locals_mod2.county_fips AS fips,group_concat(distinct ' ',strat.unit separator ',') AS strat from (((photos join locals_mod2 on((locals_mod2.id = photos.local_id))) join taxa on((taxa.photo_id = photos.id))) join strat on((strat.id = photos.strat_id))) group by locals_mod2.county_fips", function(err, rows, fields) {
+      conn.query("select count(photos.id) AS photos,count(distinct taxa.taxon) AS genera,(SELECT count(distinct photos.id) from photos where type_specimen not like '') AS type_specimen,locals_mod2.county_fips AS fips,group_concat(distinct ' ',strat.unit separator ',') AS strat FROM photos JOIN locals_mod2 on locals_mod2.id = photos.local_id JOIN taxa on taxa.photo_id = photos.id JOIN strat on strat.id = photos.strat_id group by locals_mod2.county_fips", function(err, rows, fields) {
         if (err) {
           callback(err);
         }
