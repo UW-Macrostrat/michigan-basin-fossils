@@ -115,6 +115,6 @@ app.use(function(error, req, res, next) {
    res.send('500: Internal Server Error', 500);
 });
 
-app.listen(8080);
-
-console.log('Listening on port 8080...');
+app.listen(config.port, function() {
+  console.log('Listening on port ' + config.port + '...');
+});

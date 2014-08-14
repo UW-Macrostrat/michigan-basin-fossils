@@ -1,6 +1,7 @@
 module.exports = {
   "imagePath": "/Users/you/Sites/ummp/public/images/",
-  "project_no": 1,
+  "project_id": 1,
+  "port": 8080,
   "credentials": {
     'host': 'localhost',
     'user': 'you',
