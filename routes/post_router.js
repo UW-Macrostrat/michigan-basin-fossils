@@ -321,8 +321,6 @@ exports.upload = function(req, res) {
       }, function(error) {
         callback(null, newId);
       });
-
-
     },
 
     function(newId, callback) {
@@ -545,51 +543,59 @@ exports.editRecord = function(req, res) {
     },
 
     function(picID, callback) {
+      // Clean up old taxa
+      conn.query('DELETE FROM taxa WHERE photo_id = ?', [picID], function(err, rows, fields) {
+        if (err) {
+          callback(err);
+        }
+      });
+      var taxa = [];
       for (var i = 1; i < parseInt(req.body.numTaxa) + 1; i++) {
-        var t = "t" + i,
-            tres = "tres" + i,
-            s = "s" + i,
-            sres = "sres" + i;
+        taxa.push(i);
+      }
+
+      async.each(taxa, function(taxon, callback) {
+        var t = "t" + taxon,
+            tres = "tres" + taxon,
+            s = "s" + taxon,
+            sres = "sres" + taxon;
 
         conn.query('SELECT class AS tclass FROM JJS_genera WHERE genus = ?', [req.body[t]], function(err, rows, fields) {
           if (err) {
             callback(err);
+          }
+          if (rows.length > 0) {
+            var classID = rows[0].tclass;
           } else {
-            if (rows.length > 0) {
-              var classID = rows[0].tclass;
-            } else {
-              var classID = 0;
-            }
-
-            // Clean up old taxa
-            conn.query('DELETE FROM taxa WHERE photo_id = ?', [picID], function(err, rows, fields) {
-              if (err) {
-                callback(err);
-              }
-            });
-
-            var taxaPost = {
-              photo_id: picID, 
-              taxon: req.body[t], 
-              taxon_reso: req.body[tres], 
-              species: req.body[s], 
-              species_reso: req.body[sres], 
-              class_id: classID, 
-              login_id: req.session.uid
-            };
-
-            conn.query('INSERT INTO taxa SET ?', taxaPost, function(err, rows, fields) {
-              if (err) {
-                callback(err);
-              } else {
-                console.log("Inserted into taxa");
-              }
-            });
+            var classID = 0;
           }
 
+          
+
+          var taxaPost = {
+            photo_id: picID, 
+            taxon: req.body[t], 
+            taxon_reso: req.body[tres], 
+            species: req.body[s], 
+            species_reso: req.body[sres], 
+            class_id: classID, 
+            login_id: req.session.uid
+          };
+
+          console.log(taxaPost);
+
+          conn.query('INSERT INTO taxa SET ?', taxaPost, function(err, rows, fields) {
+            if (err) {
+              callback(err);
+            } else {
+              callback();
+            }
+          });
         });
-      }
-      callback(null, picID);
+      }, function(error) {
+        callback(null, picID);
+      });
+
     },
 
     function(picID, callback) {
