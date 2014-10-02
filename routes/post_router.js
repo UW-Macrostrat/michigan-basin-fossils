@@ -22,7 +22,16 @@ exports.login = function(req, res) {
           seconds = d.getSeconds(),
           fullDate = year + "-" + month + "-" + day + " " + hours + ":" + minutes + ":" + seconds;
 
-      var post = {ip: ipAddress, project_id: config.project_id, name: req.session.user_id, date: year + "-" + month + "-" + day, time: hours + ":" + minutes + ":" + seconds, time_start: fullDate, time_end: "0000-00-00 00:00:00"};
+      var post = {
+        "ip": ipAddress, 
+        "project_id": config.project_id, 
+        "name": req.session.user_id, 
+        "date": year + "-" + month + "-" + day, 
+        "time": hours + ":" + minutes + ":" + seconds, 
+        "time_start": fullDate, 
+        "time_end": "0000-00-00 00:00:00",
+        "project_id": config.project_id
+      };
 
       conn.query('INSERT INTO userlog SET ?', post, function(err, rows, fields) {
         if (err) {
@@ -268,11 +277,16 @@ exports.upload = function(req, res) {
     },
 
     function(newId, callback) {
+      var taxa = [];
       for (var i = 1; i < parseInt(req.body.numTaxa) + 1; i++) {
-        var t = "t" + i,
-            tres = "tres" + i,
-            s = "s" + i,
-            sres = "sres" + i;
+        taxa.push(i);
+      }
+
+      async.each(taxa, function(taxon, callback) {
+        var t = "t" + taxon,
+            tres = "tres" + taxon,
+            s = "s" + taxon,
+            sres = "sres" + taxon;
 
         conn.query('SELECT class AS tclass FROM JJS_genera WHERE genus = ?', [req.body[t]], function(err, rows, fields) {
           if (err) {
@@ -294,15 +308,21 @@ exports.upload = function(req, res) {
             login_id: req.session.uid
           };
 
+          console.log(taxaPost);
+
           conn.query('INSERT INTO taxa SET ?', taxaPost, function(err, rows, fields) {
             if (err) {
               callback(err);
+            } else {
+              callback();
             }
-            console.log("Inserted into taxa");
           });
         });
-      }
-      callback(null, newId);
+      }, function(error) {
+        callback(null, newId);
+      });
+
+
     },
 
     function(newId, callback) {

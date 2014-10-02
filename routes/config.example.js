@@ -7,6 +7,6 @@ module.exports = {
     'user': 'you',
     'password': 'yourpassword',
     'database': 'yourdatabase',
-    'socketPath': '/var/mysql/mysql.sock'
+    'socketPath': '/var/tmp/mysql.sock'
   }
 }

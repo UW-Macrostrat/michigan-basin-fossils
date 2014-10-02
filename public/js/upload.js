@@ -3,20 +3,23 @@ var rows = 2;
 function addTaxonUpload() {
   $("#uploadTable tr.taxon:last").after("<tr id='taxon" + rows + "'' class='taxon'><th>Taxon " + rows + ":  <a class='btn taxonRemove'>Remove</a><br></th><td><input placeholder='Phyla, class, or order' type='text' size='22' name='t" + rows + "'> <select class='small' name='tres" + rows + "'><option value=''></option><option value='aff.'>aff.</option><option value='cf.'>cf.</option><option value='exgr.'>exgr.</option><option value='n.gen.'>n.gen.</option><option value='sensulato'>sensulato</option><option value='?'>?</option><option value=''>&quot;</option><option value='informal'>informal</option><option value='informalaff.'>informalaff.</option><option value='informalcf.'>informalcf.</option></select> <input placeholder='species' type='text'size='20'name='s" + rows + "'> <select class='small' name='sres" + rows + "'><option value=''selected></option> <option value='aff.'>aff.</option><option value='cf.'>cf.</option><option value='exgr.'>exgr.</option><option value='n.gen.'>n.gen.</option><option value='sensulato'>sensulato</option><option value='?'>?</option><option value=''>&quot;</option><option value='informal'>informal</option><option value='informalaff.'>informalaff.</option><option value='informalcf.'>informalcf.</option></select></td></tr>");
   rows++;
+  $('.taxonRemove').off("click");
   $('.taxonRemove').on('click', function() {
+    rows--;
     var id = $(this).closest("tr").attr("id");
     $('#' + id).remove();
+    $("[name=numTaxa]").val(function() {
+      return parseInt($("[name=numTaxa]").val()) - 1;
+    });
   });
 }
 
 // Attach listeners for the interface
 $('#addATaxonUpload').on('click', function() {
+  $("[name=numTaxa]").val(function() {
+    return parseInt($("[name=numTaxa]").val()) + 1;
+  });
   addTaxonUpload();
-});
-
-$('.taxonRemove').on('click', function() {
-  var id = $(this).closest("tr").attr("id");
-  $('#' + id).remove();
 });
 
 $("#stateSelector").change(function() {

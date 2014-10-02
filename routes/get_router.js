@@ -1112,9 +1112,9 @@ exports.searchRecent = function(req, res) {
     function(callback) {
       // Reset our session query
       req.session.query = undefined;
-      var page = req.query.page;
+      var page = (req.query.page) ? req.query.page : 1;
 
-      conn.query('SELECT COUNT(photos.id) as count FROM photos ' + projectJoin +' WHERE ' + projectWhere + '', function(err, rows, fields) {
+      conn.query('SELECT COUNT(photos.id) as count FROM photos ' + projectJoin + ' WHERE ' + projectWhere + '', function(err, rows, fields) {
         if (err) {
           callback(err);
         }
@@ -1138,42 +1138,40 @@ exports.searchRecent = function(req, res) {
       req.session.pages = Math.ceil(records[0].count / 20);
 
       var small = "";
-      if (!req.query.page) {
-        req.query.page = 1;
-      }
+
       // On the last page
-      if (req.query.page == req.session.pages) {
-        var previous = req.query.page -1,
+      if (page == req.session.pages) {
+        var previous = page -1,
             middlepage = req.session.pages - 2,
             nextPage = "",
             firstPage = "",
             lastPage = "yes";
       // On the first page
-      } else if (req.query.page == 1) {
+      } else if (page == 1) {
         var previous = "",
             middlepage = 3,
             nextPage = 2,
             firstPage = "yes",
             lastPage = "";
       // On the second to last page
-      } else if (req.query.page == parseInt(req.session.pages - 1)) {
+      } else if (page == parseInt(req.session.pages - 1)) {
         var previous = req.query.page -1,
             middlepage = req.session.pages - 2,
             nextPage = req.session.pages,
             firstPage = "",
             lastPage = "";
        // On any page greater than 3
-      } else if (req.query.page > 3) {
-        var previous = req.query.page - 1,
-            middlepage = req.query.page;
-            nextPage = parseInt(req.query.page) + 1
+      } else if (page > 3) {
+        var previous = page - 1,
+            middlepage = page;
+            nextPage = parseInt(page) + 1
             firstPage = "",
             lastPage = "";
       // On page 2 or 3
       } else {
-        var previous = req.query.page - 1,
+        var previous = page - 1,
             middlepage = 3;
-            nextPage = parseInt(req.query.page) + 1
+            nextPage = parseInt(page) + 1
             firstPage = "",
             lastPage = "";
       }
@@ -1181,12 +1179,13 @@ exports.searchRecent = function(req, res) {
       middlepage = parseInt(middlepage);
 
       var urlString = req.url;
-      urlString = urlString.replace(/&page=\d+/g, '').replace(/\\?page=\d+/g, '').replace(/\?&/g, '?');
+      urlString = urlString.replace(/&page=\d+/g, '').replace(/\\?page=\d+/g, '').replace(/\?&/g, '?').replace('?', '');
 
       var pages = [{"pagination":[]}],
-      pageCounter = middlepage - 2;
+          pageCounter = middlepage - 2;
+
       for (var i = 1; i < 6; i++) {
-        pages[0].pagination.push({"pageurl" : urlString + "&page=" + pageCounter});
+        pages[0].pagination.push({"pageurl" : urlString + "?page=" + pageCounter});
         pages[0].pagination[i-1]["pageid"] = pageCounter;
         if (pageCounter == req.query.page) {
           pages[0].pagination[i-1]["active"] = "yes";
@@ -1194,11 +1193,11 @@ exports.searchRecent = function(req, res) {
         pageCounter++;
       }
 
-      pages[0]["lastpageurl"] = urlString + "&page=" + req.session.pages;
+      pages[0]["lastpageurl"] = urlString + "?page=" + req.session.pages;
       pages[0]["lastpageid"] = req.session.pages;
-      pages[0]["previous"] = urlString + "&page=" + parseInt(previous);
-      pages[0]["first"] = urlString + "&page=" + 1;
-      pages[0]["next"] = urlString + "&page=" + parseInt(nextPage);
+      pages[0]["previous"] = urlString + "?page=" + parseInt(previous);
+      pages[0]["first"] = urlString + "?page=" + 1;
+      pages[0]["next"] = urlString + "?page=" + parseInt(nextPage);
 
       pages[0]["small"] = small;
       pages[0]["firstPage"] = firstPage;
@@ -1218,7 +1217,7 @@ exports.searchRecent = function(req, res) {
     },
 
     function(page, limit, limita, limitb, pages, mapdata, callback) {
-      conn.query("SELECT photos.id, photos.title, photos.ummp, photos.type_specimen, DATE_FORMAT( photos.DATE,  '%Y-%m-%d' ) AS date, locals_mod2.city, locals_mod2.county, locals_mod2.state, strat.unit, LOWER(strat.rank) as rank, users.name, photo_notes.notes, (SELECT GROUP_CONCAT(' ', taxon, ' ', species) from taxa WHERE taxa.photo_id = photos.id) as taxa FROM photos JOIN locals_mod2 ON locals_mod2.id = photos.local_id JOIN strat ON strat.id = photos.strat_id JOIN userlog ON userlog.login = photos.login_id JOIN users ON users.username = userlog.name LEFT OUTER JOIN photo_notes ON photo_notes.photo_id = photos.id WHERE " + projectWhere+ " ORDER BY date DESC LIMIT " + limita + ",20", function(err, rows, fields) {
+      conn.query("SELECT photos.id, photos.title, photos.ummp, photos.type_specimen, DATE_FORMAT( photos.DATE,  '%Y-%m-%d' ) AS date, locals_mod2.city, locals_mod2.county, locals_mod2.state, strat.unit, LOWER(strat.rank) as rank, users.name, photo_notes.notes, (SELECT GROUP_CONCAT(' ', taxon, ' ', species) from taxa WHERE taxa.photo_id = photos.id) as taxa FROM photos JOIN locals_mod2 ON locals_mod2.id = photos.local_id JOIN strat ON strat.id = photos.strat_id JOIN userlog ON userlog.login = photos.login_id JOIN users ON users.username = userlog.name LEFT OUTER JOIN photo_notes ON photo_notes.photo_id = photos.id WHERE " + projectWhere + " ORDER BY date DESC LIMIT " + limita + ",20", function(err, rows, fields) {
         if (err) {
           callback(err);
         }
@@ -1238,7 +1237,7 @@ exports.searchRecent = function(req, res) {
       } else {
         var login_id = [{"username": req.session.user_id, "full_name": req.session.full_name}];
       }
-
+      console.log(pages[0].pagination);
       res.render('searchResults', {
         "login": login_id, 
         "result": results, 
