@@ -644,11 +644,11 @@ exports.editRecord = function(req, res) {
 
               // If a watermark is requested, add it
               if(req.body.watermark) {
-                console.log("edit watermark");
+                console.log("edit watermark", picID);
                 // Add watermark to full sized version
                 easyimg.convert({src: config.imagePath + 'full/' + picID + '.jpg', dst: config.imagePath + 'full/' + picID + '.jpg', label: req.session.full_name, size: '50'}, function(err, image) {
                   if (err) {
-                    callback(error);
+                    callback(err);
                   }
                 });
                 // Add watermark to medium sized version
