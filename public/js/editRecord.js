@@ -8,15 +8,15 @@ function addTaxonUpload() {
     rows--;
     var id = $(this).closest("tr").attr("id");
     $('#' + id).remove();
-    $("[name=numTaxa]").val(function() {
-      return parseInt($("[name=numTaxa]").val()) - 1;
+    $("[name='numTaxa']").val(function() {
+      return parseInt($("[name='numTaxa']").val()) - 1;
     });
   });
 }
 
 // Attach listeners for the interface
 $('#addATaxonUpload').on('click', function() {
-  $("[name=numTaxa]").val(function() {
+  $("[name='numTaxa']").val(function() {
     return parseInt($("[name=numTaxa]").val()) + 1;
   });
   addTaxonUpload();
