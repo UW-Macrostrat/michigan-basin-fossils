@@ -583,7 +583,7 @@ exports.editRecord = function(req, res) {
             if (err) {
               callback(err);
             } else {
-              callback();
+              callback(null, picID);
             }
           });
         });
@@ -643,7 +643,6 @@ exports.editRecord = function(req, res) {
               }
 
               // If a watermark is requested, add it
-              console.log(req.body.watermark);
               if(req.body.watermark) {
                 console.log("edit watermark");
                 // Add watermark to full sized version
