@@ -1237,7 +1237,7 @@ exports.searchRecent = function(req, res) {
       } else {
         var login_id = [{"username": req.session.user_id, "full_name": req.session.full_name}];
       }
-      console.log(pages[0].pagination);
+
       res.render('searchResults', {
         "login": login_id, 
         "result": results, 

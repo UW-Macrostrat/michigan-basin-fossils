@@ -308,8 +308,6 @@ exports.upload = function(req, res) {
             login_id: req.session.uid
           };
 
-          console.log(taxaPost);
-
           conn.query('INSERT INTO taxa SET ?', taxaPost, function(err, rows, fields) {
             if (err) {
               callback(err);
@@ -357,8 +355,9 @@ exports.upload = function(req, res) {
                     callback(err);
                   // If a watermark is requested, add it
                   } else if(req.body.watermark) {
+                    console.log("watermark");
                     // Add watermark to full sized version
-                    easyimg.convert({src:config.imagePath + 'full/' + newId + '.jpg', dst:config.imagePath + 'full/' + newId + '.jpg', label: req.session.full_name, size: '55'}, function(err, image) {
+                    easyimg.convert({src:config.imagePath + 'full/' + newId + '.jpg', dst:config.imagePath + 'full/' + newId + '.jpg', label: req.session.full_name, size: '50'}, function(err, image) {
                       if (err) {
                         console.log("Error adding watermark to full sized version - ", err);
                         callback(err);
@@ -570,8 +569,6 @@ exports.editRecord = function(req, res) {
             var classID = 0;
           }
 
-          
-
           var taxaPost = {
             photo_id: picID, 
             taxon: req.body[t], 
@@ -581,8 +578,6 @@ exports.editRecord = function(req, res) {
             class_id: classID, 
             login_id: req.session.uid
           };
-
-          console.log(taxaPost);
 
           conn.query('INSERT INTO taxa SET ?', taxaPost, function(err, rows, fields) {
             if (err) {
@@ -628,11 +623,11 @@ exports.editRecord = function(req, res) {
               callback(err);
             }
             // delete the temporary file, so that the explicitly set temporary upload dir does not get filled with unwanted files
-            fs.unlink(tmp_path, function(err) {
+           /* fs.unlink(tmp_path, function(err) {
               if (err) {
                 callback(err);
               }
-            });
+            });*/
 
             // Create medium sized version
             easyimg.resize({src: config.imagePath + 'full/' + picID + '.jpg', dst: config.imagePath + 'main/' + picID + '.jpg', width:450}, function(err, image) {
@@ -648,9 +643,11 @@ exports.editRecord = function(req, res) {
               }
 
               // If a watermark is requested, add it
+              console.log(req.body.watermark);
               if(req.body.watermark) {
+                console.log("edit watermark");
                 // Add watermark to full sized version
-                easyimg.convert({src: config.imagePath + 'full/' + picID + '.jpg', dst: config.imagePath + 'full/' + picID + '.jpg', label: req.session.full_name, size: '55'}, function(err, image) {
+                easyimg.convert({src: config.imagePath + 'full/' + picID + '.jpg', dst: config.imagePath + 'full/' + picID + '.jpg', label: req.session.full_name, size: '50'}, function(err, image) {
                   if (err) {
                     callback(error);
                   }
