@@ -195,7 +195,7 @@
     $('#deleteRecord').click(function() {
       var confirmation = confirm("Are you sure you'd like to delete this record? All user comments will also be deleted");
       if (confirmation === true) {
-        var currentRecord = $('[name=record').val();
+        var currentRecord = $('[name=record]').val();
         $.ajax({
           type:'POST',
           url:'/deleteRecord/' + currentRecord, 
