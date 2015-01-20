@@ -10,18 +10,23 @@ mysqlConn.getConnection(function(err, connection) {
     if (error) {
       console.log(error);
     } else {
-      async.each(result, function(record, callback) {
+      async.eachLimit(result, 10, function(record, callback) {
+        console.log("http://paleobiodb.org/data1.1/taxa/single.json?name=" + record.taxon + "&show=attr,nav");
         http.get('http://paleobiodb.org/data1.1/taxa/single.json?name=' + record.taxon + '&show=attr,nav', function(response) {
           var body = '';
 
           response.on('data', function(chunk) {
             body += chunk;
           });
-
+		
+		  response.on("error", function(e) {
+		  	console.log(e);
+		  });
           response.on('end', function() {
             var data = JSON.parse(body);
-
+            
             if (data.records.length > 0) {
+            
               var clt = (data.records[0].clt) ? data.records[0].clt.nam : "",
                   odt = (data.records[0].odt) ? data.records[0].odt.nam : "",
                   fmt = (data.records[0].fmt) ? data.records[0].fmt.nam : "",
