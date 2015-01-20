@@ -11,7 +11,6 @@ mysqlConn.getConnection(function(err, connection) {
       console.log(error);
     } else {
       async.eachLimit(result, 10, function(record, callback) {
-        console.log("http://paleobiodb.org/data1.1/taxa/single.json?name=" + record.taxon + "&show=attr,nav");
         http.get('http://paleobiodb.org/data1.1/taxa/single.json?name=' + record.taxon + '&show=attr,nav', function(response) {
           var body = '';
 
