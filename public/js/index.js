@@ -73,20 +73,20 @@ $(document).ready(function() {
   // Load 16 random pictures on page load
   $.ajax({
       type:'GET',
-      url:'/api/photos/random/' + 16, 
+      url:'/api/photos/random/' + 16,
       success: function(data) {
         var photos = data;
         //console.log(photos)
       },
-      dataType: 'jsonp', 
-      async: false 
+      dataType: 'jsonp',
+      async: false
     });
 
   // Grab 16 random pictures when "Load More" is clicked
   $('#loadMore').click(function(){
     $.ajax({
       type:'GET',
-      url:'/api/photos/random/' + 16, 
+      url:'/api/photos/random/' + 16,
       success: function(data) {
         var photos = data;
         //console.log(photos)
@@ -99,8 +99,8 @@ $(document).ready(function() {
           window.location.href = "/viewrecord/" + theID;
         });
       },
-      dataType: 'jsonp', 
-      async: false 
+      dataType: 'jsonp',
+      async: false
     });
   });
 
@@ -113,7 +113,7 @@ $(document).ready(function() {
       $('.nav-collapse.collapse.nav-pills.pull-right.nav-tabs-fixed').css('width','auto').css('background-color', 'inherit').css('top', 0);
     }
   }
-  
+
   function resizePics() {
     var htmlWidth = $('html').width();
 
@@ -147,7 +147,11 @@ $(document).ready(function() {
     osm = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: 'Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'}).addTo(map),
     zoom = new L.Control.Zoom({position: 'bottomright'}).addTo(map),
     legend = L.control({position: 'bottomleft'});
-    
+
+  var burwell = new L.TileLayer('https://macrostrat.org/api/v2/maps/burwell/{z}/{x}/{y}/tile.png', {
+    opacity: 0.8
+  }).addTo(map);
+
   legend.onAdd = function(map) {
       var div = L.DomUtil.create('div', 'info legend'),
         colors = ['#377C5A','#47966A','#57B07B','#69CB8B','#7CE79B','#bbb'],
@@ -196,7 +200,7 @@ $(document).ready(function() {
           input_geojson.geometries[i].properties.type_specimen = photos[j].type_specimen;
           input_geojson.geometries[i].properties.strat = photos[j].strat;
           input_geojson.geometries[i].properties.pages = Math.ceil(photos[j].photos / 20);
-        } 
+        }
 
       }
       if (typeof input_geojson.geometries[i].properties.photos === 'undefined') {
@@ -221,21 +225,25 @@ $(document).ready(function() {
   });  // End getJSON for load features callback
 
   function getColor(d) {
-    return d > 300  ? '#377C5A' :
-           d > 100  ? '#47966A' :
-           d > 50   ? '#57B07B' :
-           d > 10   ? '#69CB8B' :
-           d > 0    ? '#7CE79B' :
-                       '#bbb';
+    return d > 300  ? '#252525' :
+           d > 100  ? '#636363' :
+           d > 50   ? '#969696' :
+           d > 10   ? '#bdbdbd' :
+           d > 0    ? '#d9d9d9' :
+                       '#f7f7f7';
+  }
+
+  function getOpacity(d) {
+    return d > 0 ? 0.85 : 0.45
   }
 
   function style(feature) {
     return {
         fillColor: getColor(feature.properties.photos),
         weight: 0.1,
-        opacity: 1,
+        opacity: 0.5,
         color: '#222',
-        fillOpacity: 0.7
+        fillOpacity: getOpacity(feature.properties.photos)
     };
   }
 });
@@ -257,11 +265,11 @@ $(document).ready(function() {
   function fetchCountyPhotos(e) {
     limit = 0;
     currentPage = 1;
-    currentCounty = e.target; 
+    currentCounty = e.target;
 
     $.ajax({
       type:'GET',
-      url:'/api/photos/county/' + currentCounty.feature.properties.FIPS + '?home=true&limit=0', 
+      url:'/api/photos/county/' + currentCounty.feature.properties.FIPS + '?home=true&limit=0',
       success: function(data) {
         if (data.length > 0) {
           var result = {"pictures" : data},
@@ -287,7 +295,7 @@ $(document).ready(function() {
           $('a[href=#thumbGrid]').tab('show');
 
           // Link the thumbnails to their larger versions and switch tabs
-          $('.tmb').on('click', function() { 
+          $('.tmb').on('click', function() {
             var theID = $(this).attr("id");
             $('.item').removeClass('active');
             $('#' + theID + '.item').addClass('active');
@@ -324,9 +332,9 @@ $(document).ready(function() {
             });
           }
         } // End if
-      }, 
-      dataType: 'jsonp', 
-      async: false 
+      },
+      dataType: 'jsonp',
+      async: false
     });
   }
 
@@ -359,7 +367,7 @@ function morePictures(e, direction) {
 
   $.ajax({
     type:'GET',
-    url:'/api/photos/county/' + currentCounty.feature.properties.FIPS + '?home=true&limit=' + limit, 
+    url:'/api/photos/county/' + currentCounty.feature.properties.FIPS + '?home=true&limit=' + limit,
     success: function(data) {
       if (data.length > 0) {
         var result = {"pictures" : data},
@@ -385,7 +393,7 @@ function morePictures(e, direction) {
         $('a[href=#thumbGrid]').tab('show');
 
         // Link the thumbnails to their larger versions and switch tabs
-        $('.tmb').on('click', function() { 
+        $('.tmb').on('click', function() {
           var theID = $(this).attr("id");
           $('.item').removeClass('active');
           $('#' + theID + '.item').addClass('active');
@@ -397,7 +405,7 @@ function morePictures(e, direction) {
 
         if (currentCounty.feature.properties.photos > 20) {
           $('.modal-header.county').html('<p>Showing 20 of ' + currentCounty.feature.properties.photos + ' pictures</p><a href="javascript:morePictures(0)">Previous 20</a>      <a href="javascript:morePictures(1)">Next 20</a>');
-        } 
+        }
         if (data.length == 1) {
           $('.left.carousel-control').hide();
           $('.right.carousel-control').hide();
@@ -415,9 +423,9 @@ function morePictures(e, direction) {
           });
         }
       } // End if
-    }, 
-    dataType: 'jsonp', 
-    async: false 
+    },
+    dataType: 'jsonp',
+    async: false
   });
 }
 
