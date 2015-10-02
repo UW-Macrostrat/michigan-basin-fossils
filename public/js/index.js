@@ -154,7 +154,7 @@ $(document).ready(function() {
 
   legend.onAdd = function(map) {
       var div = L.DomUtil.create('div', 'info legend'),
-        colors = ['#377C5A','#47966A','#57B07B','#69CB8B','#7CE79B','#bbb'],
+        colors = ['#252525','#636363','#969696','#bdbdbd','#d9d9d9','#f7f7f7'],
         breaks = ['Greater than 300', '101-300', '51-100', '11-50', '1-10', 'None'];
 
       div.innerHTML += 'Number of Photos<br>';
