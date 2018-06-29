@@ -574,7 +574,7 @@ exports.viewrecord = function(req, res) {
       });
     },
     result: function(callback) {
-      conn.query("SELECT DISTINCT photos.id, photos.title, photos.ummp, photos.type_specimen, photos.stage, photos.containing_stage, photos.chron_id, DATE_FORMAT( photos.DATE,  '%Y-%m-%d' ) AS date, locals_mod2.city, locals_mod2.county, locals_mod2.state, strat.unit, LOWER(strat.rank) as rank, users.name, photo_notes.notes, (SELECT GROUP_CONCAT(' ', taxon, ' ', species) FROM taxa WHERE taxa.photo_id = photos.id) as taxa FROM photos JOIN locals_mod2 ON locals_mod2.id = photos.local_id JOIN strat ON strat.id = photos.strat_id JOIN userlog ON userlog.login = photos.login_id JOIN users ON users.username = userlog.name LEFT OUTER JOIN photo_notes ON photo_notes.photo_id = photos.id JOIN taxa ON taxa.photo_id = photos.id WHERE photos.id = ? LIMIT  0,20", [req.params.id],
+      conn.query("SELECT DISTINCT photos.id, photos.title, photos.ummp, photos.type_specimen, photos.stage, photos.containing_stage, photos.chron_id, DATE_FORMAT( photos.DATE,  '%Y-%m-%d' ) AS date, locals_mod2.city, locals_mod2.county, locals_mod2.state, strat.unit, LOWER(strat.rank) as rank, users.name, photo_notes.notes, (SELECT GROUP_CONCAT(' ', taxon, ' ', species) FROM taxa WHERE taxa.photo_id = photos.id) as taxa FROM photos JOIN locals_mod2 ON locals_mod2.id = photos.local_id JOIN strat ON strat.id = photos.strat_id JOIN userlog ON userlog.login = photos.login_id JOIN users ON users.username = userlog.name LEFT OUTER JOIN photo_notes ON photo_notes.photo_id = photos.id LEFT JOIN taxa ON taxa.photo_id = photos.id WHERE photos.id = ? LIMIT  0,20", [req.params.id],
         function(err, rows, fields) {
         if (err) {
           callback(err);
